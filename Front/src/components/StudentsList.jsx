@@ -8,6 +8,7 @@ import {
   Divider,
   FormControl,
   InputLabel,
+  Link,
   MenuItem,
   Paper,
   Select,
@@ -15,13 +16,12 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import SearchIcon from '@mui/icons-material/Search';
+import { Link as RouterLink } from 'react-router-dom';
 import { useStudents } from '../hooks/useStudents';
 import { StudentCard } from './StudentCard';
-import { StudentForm } from './StudentForm';
 import { LoadingIndicator } from './LoadingIndicator';
 import { ErrorAlert } from './ErrorAlert';
 
@@ -53,12 +53,13 @@ export const StudentsList = () => {
   const [level, setLevel] = useState('');
   const [skill, setSkill] = useState('');
   const [sort, setSort] = useState('featured');
+  const maxVisibleProfiles = 6;
 
   const filteredStudents = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     const results = students.filter((student) => {
       const fullName = `${student.firstName || ''} ${student.lastName || ''}`.toLowerCase();
-      const searchable = `${fullName} ${student.jobTitle || ''} ${student.location || ''}`.toLowerCase();
+      const searchable = `${fullName} ${student.jobTitle || ''} ${student.location || ''} ${student.school?.name || ''} ${student.company?.name || ''}`.toLowerCase();
       const matchesSearch = !normalizedSearch || searchable.includes(normalizedSearch);
       const matchesSkill =
         !skill ||
@@ -77,61 +78,32 @@ export const StudentsList = () => {
     return results;
   }, [level, search, skill, sort, students]);
 
+  const visibleStudents = useMemo(
+    () => filteredStudents.slice(0, maxVisibleProfiles),
+    [filteredStudents]
+  );
+
   const featuredSkills = useMemo(() => {
     const skills = students.flatMap((student) => student.skills || []);
-    return skills.length ? skills.slice(0, 6) : [
+    const uniqueSkills = Array.from(
+      new Map(
+        skills
+          .filter((skill) => skill?.name)
+          .map((skill) => [skill.name.toLowerCase(), skill])
+      ).values()
+    );
+
+    return uniqueSkills.length ? uniqueSkills.slice(0, 12) : [
       { name: 'React', level: 'Advanced' },
       { name: 'TypeScript', level: 'Intermédiaire' },
       { name: 'Figma', level: 'Advanced' },
     ];
   }, [students]);
 
-  const handleAddClick = () => {
-    setFormStudent(null);
-    setFormOpen(true);
-  };
-
-  const handleEditClick = (student) => {
-    setSelectedStudent(student);
-    setFormStudent(student);
-    setFormOpen(true);
-  };
-
-  const handleFormClose = () => {
-    setFormOpen(false);
-    setFormStudent(null);
-  };
-
-  const handleFormSubmit = async (formData) => {
-    setSubmitting(true);
-    try {
-      if (formStudent) {
-        await updateStudentItem(formStudent.id, formData);
-      } else {
-        await addStudent(formData);
-      }
-      handleFormClose();
-    } catch (err) {
-      console.error('Erreur lors de la soumission:', err);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleDeleteClick = async (id) => {
-    if (window.confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
-      try {
-        await removeStudent(id);
-        if (selectedStudent?.id === id) {
-          setSelectedStudent(null);
-        }
-      } catch (err) {
-        console.error('Erreur lors de la suppression:', err);
-      }
-    }
-  };
-
-  const activeProfile = selectedStudent || filteredStudents[0] || students[0];
+  const activeProfile =
+    (selectedStudent && filteredStudents.some((student) => student.id === selectedStudent.id)
+      ? selectedStudent
+      : visibleStudents[0]) || students[0];
 
   return (
     <Box sx={{ minHeight: '100vh', bgcolor: '#f7f8fa', color: '#102339', pb: 4 }}>
@@ -199,21 +171,6 @@ export const StudentsList = () => {
                 >
                   Explorer les talents
                 </Button>
-                <Button
-                  variant="outlined"
-                  startIcon={<AddIcon />}
-                  onClick={handleAddClick}
-                  sx={{
-                    borderColor: 'rgba(255,255,255,.8)',
-                    color: '#fff',
-                    borderRadius: 99,
-                    px: 2.4,
-                    fontWeight: 800,
-                    textTransform: 'none',
-                  }}
-                >
-                  Ajouter un profil
-                </Button>
               </Stack>
             </Box>
 
@@ -262,9 +219,9 @@ export const StudentsList = () => {
           }}
         >
           {[
-            ['Profils actifs', students.length],
-            ['Selection visible', filteredStudents.length],
-            ['Talents mis en avant', Math.min(2, students.length || 2)],
+            ['Profils disponibles', students.length],
+            ['Profils visibles', visibleStudents.length],
+            ['Profils à affiner', filteredStudents.length],
             ['Competences avancees', featuredSkills.length],
           ].map(([label, value]) => (
             <Box key={label} sx={{ p: 2, bgcolor: '#fff', border: '1px solid #edf1f5' }}>
@@ -320,15 +277,6 @@ export const StudentsList = () => {
                     sx={{ borderRadius: 99, textTransform: 'none', fontWeight: 800 }}
                   >
                     Réinitialiser
-                  </Button>
-                  <Button
-                    variant="contained"
-                    startIcon={<AddIcon />}
-                    onClick={handleAddClick}
-                    disabled={loading}
-                    sx={{ borderRadius: 99, bgcolor: '#ffc21c', color: '#102339', textTransform: 'none', fontWeight: 900 }}
-                  >
-                    Ajouter un profil
                   </Button>
                 </Stack>
               </Stack>
@@ -411,14 +359,12 @@ export const StudentsList = () => {
               </Paper>
             ) : (
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 1.6 }}>
-                {filteredStudents.map((student) => (
+                {visibleStudents.map((student) => (
                   <StudentCard
                     key={student.id}
                     student={student}
                     selected={activeProfile?.id === student.id}
                     onSelect={setSelectedStudent}
-                    onEdit={handleEditClick}
-                    onDelete={handleDeleteClick}
                   />
                 ))}
               </Box>
@@ -442,6 +388,38 @@ export const StudentsList = () => {
                         <Typography variant="body2" sx={{ color: '#627386' }}>
                           {activeProfile.jobTitle || 'Profil étudiant'} - {activeProfile.age || '--'} ans
                         </Typography>
+                        <Typography variant="body2" sx={{ color: '#627386' }}>
+                          École:{' '}
+                          {activeProfile.school?.id ? (
+                            <Link
+                              component={RouterLink}
+                              to={`/schools/${activeProfile.school.id}`}
+                              onClick={(event) => event.stopPropagation()}
+                              underline="hover"
+                              sx={{ color: '#627386', fontWeight: 800 }}
+                            >
+                              {activeProfile.school.name}
+                            </Link>
+                          ) : (
+                            'Non renseignée'
+                          )}
+                        </Typography>
+                        <Typography variant="body2" sx={{ color: '#627386' }}>
+                          Entreprise:{' '}
+                          {activeProfile.company?.id ? (
+                            <Link
+                              component={RouterLink}
+                              to={`/companies/${activeProfile.company.id}`}
+                              onClick={(event) => event.stopPropagation()}
+                              underline="hover"
+                              sx={{ color: '#627386', fontWeight: 800 }}
+                            >
+                              {activeProfile.company.name}
+                            </Link>
+                          ) : (
+                            'Non renseignée'
+                          )}
+                        </Typography>
                       </Box>
                     </Stack>
                   </Box>
@@ -451,6 +429,8 @@ export const StudentsList = () => {
                       {[
                         ['Email', `${activeProfile.firstName || 'talent'}.${activeProfile.lastName || 'hexagone'}@theque.dev`],
                         ['Role', activeProfile.jobTitle || 'Frontend Developer'],
+                        ['École', activeProfile.school?.name || 'Non renseignée'],
+                        ['Entreprise', activeProfile.company?.name || 'Non renseignée'],
                         ['Localisation', activeProfile.location || 'Paris'],
                         ['Positionnement', 'Profil mis en avant'],
                       ].map(([label, value]) => (
@@ -521,13 +501,6 @@ export const StudentsList = () => {
         </Paper>
       </Container>
 
-      <StudentForm
-        open={formOpen}
-        student={formStudent}
-        onClose={handleFormClose}
-        onSubmit={handleFormSubmit}
-        loading={submitting}
-      />
     </Box>
   );
 };

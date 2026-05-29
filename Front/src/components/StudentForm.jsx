@@ -7,9 +7,15 @@ import {
   TextField,
   Button,
   Box,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
+import * as schoolsService from '../services/schoolsService';
+import * as companiesService from '../services/companiesService';
 
 /**
  * Composant formulaire pour ajouter ou éditer un étudiant
@@ -21,15 +27,46 @@ import SaveIcon from '@mui/icons-material/Save';
  * @param {boolean} props.loading - Indique si l'envoi est en cours
  */
 export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
+  const [schools, setSchools] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     age: '',
     jobTitle: '',
     location: '',
+    schoolId: '',
+    companyId: '',
   });
 
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    let mounted = true;
+    schoolsService.getSchools().then((data) => {
+      if (mounted) {
+        setSchools(data);
+      }
+    }).catch(() => {
+      if (mounted) {
+        setSchools([]);
+      }
+    });
+
+    companiesService.getCompanies().then((data) => {
+      if (mounted) {
+        setCompanies(data);
+      }
+    }).catch(() => {
+      if (mounted) {
+        setCompanies([]);
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   /**
    * Initialise le formulaire avec les données de l'étudiant s'il y en a un
@@ -44,6 +81,8 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
         age: student.age || '',
         jobTitle: student.jobTitle || '',
         location: student.location || '',
+        schoolId: student.school?.id || '',
+        companyId: student.company?.id || '',
       });
     } else {
       setFormData({
@@ -52,6 +91,8 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
         age: '',
         jobTitle: '',
         location: '',
+        schoolId: '',
+        companyId: '',
       });
     }
     setErrors({});
@@ -68,6 +109,7 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
     if (!formData.age || formData.age < 0) newErrors.age = 'L\'âge valide est requis';
     if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Le poste recherché est requis';
     if (!formData.location.trim()) newErrors.location = 'La localisation est requise';
+    if (!formData.schoolId) newErrors.schoolId = 'L\'école est requise';
     return newErrors;
   };
 
@@ -108,6 +150,8 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
         age: '',
         jobTitle: '',
         location: '',
+        schoolId: '',
+        companyId: '',
       });
     } catch (error) {
       // L'erreur est gérée dans le hook useStudents
@@ -170,6 +214,44 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
             helperText={errors.location}
             fullWidth
           />
+          <FormControl fullWidth error={!!errors.schoolId}>
+            <InputLabel id="school-label">École</InputLabel>
+            <Select
+              labelId="school-label"
+              name="schoolId"
+              label="École"
+              value={formData.schoolId}
+              onChange={handleChange}
+            >
+              <MenuItem value="">
+                <em>Sélectionner une école</em>
+              </MenuItem>
+              {schools.map((school) => (
+                <MenuItem key={school.id} value={school.id}>
+                  {school.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+          <FormControl fullWidth>
+            <InputLabel id="company-label">Entreprise</InputLabel>
+            <Select
+              labelId="company-label"
+              name="companyId"
+              label="Entreprise"
+              value={formData.companyId}
+              onChange={handleChange}
+            >
+              <MenuItem value="">
+                <em>Aucune entreprise</em>
+              </MenuItem>
+              {companies.map((company) => (
+                <MenuItem key={company.id} value={company.id}>
+                  {company.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
       </DialogContent>
       <DialogActions>

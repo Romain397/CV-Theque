@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Entity\School;
+use App\Entity\Company;
 use App\Entity\Student;
 use App\Repository\StudentRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -30,7 +32,7 @@ final class StudentController extends AbstractController
         $data = $this->getRequestData($request);
         $student = new Student();
 
-        $this->hydrateStudent($student, $data);
+        $this->hydrateStudent($student, $data, $em);
 
         $em->persist($student);
         $em->flush();
@@ -43,7 +45,7 @@ final class StudentController extends AbstractController
     {
         $data = $this->getRequestData($request);
 
-        $this->hydrateStudent($student, $data);
+        $this->hydrateStudent($student, $data, $em);
         $em->flush();
 
         return $this->json($this->formatStudent($student));
@@ -71,7 +73,7 @@ final class StudentController extends AbstractController
         return $data;
     }
 
-    private function hydrateStudent(Student $student, array $data): void
+    private function hydrateStudent(Student $student, array $data, EntityManagerInterface $em): void
     {
         foreach (['firstName', 'lastName', 'age', 'jobTitle', 'location'] as $field) {
             if (!array_key_exists($field, $data)) {
@@ -85,6 +87,40 @@ final class StudentController extends AbstractController
             ->setAge((int) $data['age'])
             ->setJobTitle((string) $data['jobTitle'])
             ->setLocation((string) $data['location']);
+
+        if (array_key_exists('schoolId', $data)) {
+            $schoolId = $data['schoolId'];
+            $student->setSchool(null);
+
+            if ($schoolId !== null && $schoolId !== '') {
+                $school = $em->getRepository(School::class)->find((int) $schoolId);
+
+                if (!$school) {
+                    throw new BadRequestHttpException('Unknown schoolId.');
+                }
+
+                $student->setSchool($school);
+            }
+        }
+
+        if (array_key_exists('companyId', $data)) {
+            $companyId = $data['companyId'];
+            $student->setCompany(null);
+
+            if ($companyId !== null && $companyId !== '') {
+                $company = $em->getRepository(Company::class)->find((int) $companyId);
+
+                if (!$company) {
+                    throw new BadRequestHttpException('Unknown companyId.');
+                }
+
+                $student->setCompany($company);
+            }
+        }
+
+        if (array_key_exists('skills', $data) || array_key_exists('tags', $data)) {
+            $student->setSkills($this->normalizeSkills($data['skills'] ?? $data['tags']));
+        }
     }
 
     private function formatStudent(Student $student): array
@@ -96,6 +132,45 @@ final class StudentController extends AbstractController
             'age' => $student->getAge(),
             'jobTitle' => $student->getJobTitle(),
             'location' => $student->getLocation(),
+            'skills' => array_values($student->getSkills()),
+            'school' => $student->getSchool() ? [
+                'id' => $student->getSchool()->getId(),
+                'name' => $student->getSchool()->getName(),
+                'location' => $student->getSchool()->getLocation(),
+            ] : null,
+            'company' => $student->getCompany() ? [
+                'id' => $student->getCompany()->getId(),
+                'name' => $student->getCompany()->getName(),
+                'location' => $student->getCompany()->getLocation(),
+            ] : null,
         ];
+    }
+
+    private function normalizeSkills(array $skills): array
+    {
+        return array_values(array_filter(array_map(static function ($skill): ?array {
+            if (is_string($skill)) {
+                $name = trim($skill);
+
+                return $name !== '' ? ['name' => $name, 'level' => 'Intermédiaire'] : null;
+            }
+
+            if (!is_array($skill)) {
+                return null;
+            }
+
+            $name = trim((string) ($skill['name'] ?? ''));
+
+            if ($name === '') {
+                return null;
+            }
+
+            $level = trim((string) ($skill['level'] ?? 'Intermédiaire'));
+
+            return [
+                'name' => $name,
+                'level' => $level !== '' ? $level : 'Intermédiaire',
+            ];
+        }, $skills)));
     }
 }

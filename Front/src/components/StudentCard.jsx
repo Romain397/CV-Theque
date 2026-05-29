@@ -3,21 +3,22 @@ import {
   Box,
   Button,
   Chip,
-  IconButton,
+  Link,
   Paper,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import { Link as RouterLink } from 'react-router-dom';
 
 const initials = (student) =>
   `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`.toUpperCase() || 'PR';
 
 const visibleSkills = (skills = []) => skills.slice(0, 3);
 
-export const StudentCard = ({ student, selected, onSelect, onEdit, onDelete }) => {
+export const StudentCard = ({ student, selected, onSelect }) => {
+  const schoolHref = student.school?.id ? `/schools/${student.school.id}` : null;
+  const companyHref = student.company?.id ? `/companies/${student.company.id}` : null;
+
   return (
     <Paper
       component="article"
@@ -78,6 +79,39 @@ export const StudentCard = ({ student, selected, onSelect, onEdit, onDelete }) =
           <Typography variant="body2" sx={{ color: '#607287', mt: 0.2 }}>
             {student.jobTitle || 'Profil étudiant'}
           </Typography>
+          <Typography variant="caption" sx={{ color: '#7a8794', display: 'block', mt: 0.5 }}>
+            {schoolHref ? (
+              <Link
+                component={RouterLink}
+                to={schoolHref}
+                onClick={(event) => event.stopPropagation()}
+                underline="hover"
+                sx={{ color: '#7a8794', fontWeight: 800 }}
+              >
+                {student.school?.name}
+              </Link>
+            ) : (
+              'École non renseignée'
+            )}
+          </Typography>
+          {student.company && (
+            <Typography variant="caption" sx={{ color: '#7a8794', display: 'block', mt: 0.3 }}>
+              Entreprise:{' '}
+              {companyHref ? (
+                <Link
+                  component={RouterLink}
+                  to={companyHref}
+                  onClick={(event) => event.stopPropagation()}
+                  underline="hover"
+                  sx={{ color: '#7a8794', fontWeight: 800 }}
+                >
+                  {student.company.name}
+                </Link>
+              ) : (
+                student.company.name
+              )}
+            </Typography>
+          )}
         </Box>
       </Stack>
 
@@ -149,33 +183,6 @@ export const StudentCard = ({ student, selected, onSelect, onEdit, onDelete }) =
         >
           Voir le profil complet
         </Button>
-
-        <Stack direction="row" spacing={0.6}>
-          <Tooltip title="Modifier">
-            <IconButton
-              size="small"
-              onClick={(event) => {
-                event.stopPropagation();
-                onEdit(student);
-              }}
-              sx={{ border: '1px solid #bdc8d3', color: '#4d6479' }}
-            >
-              <EditIcon fontSize="inherit" />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title="Supprimer">
-            <IconButton
-              size="small"
-              onClick={(event) => {
-                event.stopPropagation();
-                onDelete(student.id);
-              }}
-              sx={{ border: '1px solid #ff8a98', color: '#e6344d' }}
-            >
-              <DeleteIcon fontSize="inherit" />
-            </IconButton>
-          </Tooltip>
-        </Stack>
       </Stack>
     </Paper>
   );

@@ -13,20 +13,31 @@ class Student
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(name: 'first_name', length: 50)]
     private ?string $firstName = null;
 
-    #[ORM\Column(length: 50)]
+    #[ORM\Column(name: 'last_name', length: 50)]
     private ?string $lastName = null;
 
     #[ORM\Column]
     private ?int $age = null;
 
-    #[ORM\Column(length: 100)]
+    #[ORM\Column(name: 'job_title', length: 100)]
     private ?string $jobTitle = null;
 
     #[ORM\Column(length: 100)]
     private ?string $location = null;
+
+    #[ORM\ManyToOne(targetEntity: School::class)]
+    #[ORM\JoinColumn(name: 'school_id', referencedColumnName: 'id', nullable: true)]
+    private ?School $school = null;
+
+    #[ORM\ManyToOne(targetEntity: Company::class)]
+    #[ORM\JoinColumn(name: 'company_id', referencedColumnName: 'id', nullable: true)]
+    private ?Company $company = null;
+
+    #[ORM\Column(type: 'json')]
+    private array $skills = [];
 
     public function getId(): ?int
     {
@@ -89,6 +100,42 @@ class Student
     public function setLocation(string $location): static
     {
         $this->location = $location;
+
+        return $this;
+    }
+
+    public function getSchool(): ?School
+    {
+        return $this->school;
+    }
+
+    public function setSchool(?School $school): static
+    {
+        $this->school = $school;
+
+        return $this;
+    }
+
+    public function getCompany(): ?Company
+    {
+        return $this->company;
+    }
+
+    public function setCompany(?Company $company): static
+    {
+        $this->company = $company;
+
+        return $this;
+    }
+
+    public function getSkills(): array
+    {
+        return $this->skills;
+    }
+
+    public function setSkills(array $skills): static
+    {
+        $this->skills = $skills;
 
         return $this;
     }
