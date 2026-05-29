@@ -10,7 +10,7 @@
 
 // URL de base de l'API
 // Elle est lue depuis le fichier .env.local
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 /**
  * RÉCUPÉRER la liste de TOUS les étudiants
@@ -53,7 +53,7 @@ export const getStudentById = async (id) => {
  *     firstName: 'John',
  *     lastName: 'Doe',
  *     age: 25,
- *     position: 'Développeur',
+ *     jobTitle: 'Développeur',
  *     location: 'Paris'
  *   });
  * 
@@ -80,7 +80,7 @@ export const createStudent = async (studentData) => {
  * Exemple d'utilisation:
  *   const updated = await updateStudent(1, {
  *     firstName: 'Jane',
- *     position: 'Développeuse Senior'
+ *     jobTitle: 'Développeuse Senior'
  *   });
  * 
  * @param {number} id - L'ID de l'étudiant à mettre à jour

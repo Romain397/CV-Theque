@@ -30,7 +30,7 @@ export const StudentCard = ({ student, onEdit, onDelete }) => {
             <strong>Âge:</strong> {student.age}
           </Typography>
           <Typography color="textSecondary" variant="body2">
-            <strong>Poste recherché:</strong> {student.position}
+            <strong>Poste recherché:</strong> {student.jobTitle}
           </Typography>
           <Typography color="textSecondary" variant="body2">
             <strong>Localisation:</strong> {student.location}

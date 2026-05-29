@@ -7,7 +7,6 @@ import {
   TextField,
   Button,
   Box,
-  Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
@@ -26,7 +25,7 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
     firstName: '',
     lastName: '',
     age: '',
-    position: '',
+    jobTitle: '',
     location: '',
   });
 
@@ -35,13 +34,15 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
   /**
    * Initialise le formulaire avec les données de l'étudiant s'il y en a un
    */
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
+    // Synchronise la modale avec l'etudiant selectionne.
     if (student) {
       setFormData({
         firstName: student.firstName || '',
         lastName: student.lastName || '',
         age: student.age || '',
-        position: student.position || '',
+        jobTitle: student.jobTitle || '',
         location: student.location || '',
       });
     } else {
@@ -49,12 +50,13 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
         firstName: '',
         lastName: '',
         age: '',
-        position: '',
+        jobTitle: '',
         location: '',
       });
     }
     setErrors({});
   }, [student, open]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   /**
    * Valide le formulaire
@@ -64,7 +66,7 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
     if (!formData.firstName.trim()) newErrors.firstName = 'Le prénom est requis';
     if (!formData.lastName.trim()) newErrors.lastName = 'Le nom est requis';
     if (!formData.age || formData.age < 0) newErrors.age = 'L\'âge valide est requis';
-    if (!formData.position.trim()) newErrors.position = 'Le poste recherché est requis';
+    if (!formData.jobTitle.trim()) newErrors.jobTitle = 'Le poste recherché est requis';
     if (!formData.location.trim()) newErrors.location = 'La localisation est requise';
     return newErrors;
   };
@@ -104,7 +106,7 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
         firstName: '',
         lastName: '',
         age: '',
-        position: '',
+        jobTitle: '',
         location: '',
       });
     } catch (error) {
@@ -151,12 +153,12 @@ export const StudentForm = ({ open, student, onClose, onSubmit, loading }) => {
             fullWidth
           />
           <TextField
-            name="position"
             label="Poste recherché"
-            value={formData.position}
+            name="jobTitle"
+            value={formData.jobTitle}
             onChange={handleChange}
-            error={!!errors.position}
-            helperText={errors.position}
+            error={!!errors.jobTitle}
+            helperText={errors.jobTitle}
             fullWidth
           />
           <TextField

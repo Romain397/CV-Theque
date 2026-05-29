@@ -62,7 +62,7 @@ export const useStudents = () => {
    *     firstName: 'John',
    *     lastName: 'Doe',
    *     age: 25,
-   *     position: 'Développeur',
+   *     jobTitle: 'Développeur',
    *     location: 'Paris'
    *   });
    */
@@ -87,7 +87,7 @@ export const useStudents = () => {
    * Utilisation:
    *   await updateStudentItem(1, {
    *     firstName: 'Jane',
-   *     position: 'Senior Developer'
+   *     jobTitle: 'Senior Developer'
    *   });
    */
   const updateStudentItem = useCallback(async (id, studentData) => {
@@ -136,6 +136,8 @@ export const useStudents = () => {
    * C'est magique pour les données initiales !
    */
   useEffect(() => {
+    // Le sujet demande un hook chargeant les etudiants au montage.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStudents();
   }, [fetchStudents]);
 
