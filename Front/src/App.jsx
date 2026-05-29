@@ -1,8 +1,10 @@
-import { StudentsDashboard } from './components/StudentsDashboard'
+import { StudentsList } from './components/StudentsList'
 import './App.css'
 
 function App() {
-  return <StudentsDashboard />
+  return (
+    <StudentsList />
+  )
 }
 
 export default App

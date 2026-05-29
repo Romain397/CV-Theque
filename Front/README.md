@@ -1,18 +1,82 @@
-# React + Vite
+# 🎓 CVthèque - Frontend React
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+**Application de gestion d'étudiants avec API REST**
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ⚡ Démarrage RAPIDE (3 minutes)
 
-## React Compiler
+```bash
+npm install        # 1. Installer (une seule fois)
+npm run dev        # 2. Démarrer
+```
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+Ouvrir: **http://localhost:5173** ✅
 
-Note: This will impact Vite dev & build performances.
+---
 
-## Expanding the ESLint configuration
+## 📖 Documentation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+| Document | Contient |
+|----------|----------|
+| **[QUICKSTART.md](./QUICKSTART.md)** | Démarrage en 3 étapes |
+| **[GUIDE.md](./GUIDE.md)** | ⭐ COMPLET - Tout ce qu'il faut savoir |
+| [TROUBLESHOOTING.md](./TROUBLESHOOTING.md) | Solutions aux erreurs |
+| [INTEGRATION_BACKEND.md](./INTEGRATION_BACKEND.md) | Configurer l'API Symfony |
+| [EXEMPLES.md](./EXEMPLES.md) | Exemples de code |
+| [ARCHITECTURE.md](./ARCHITECTURE.md) | Pour les avancés |
+
+---
+
+## 🚀 Je veux...
+
+### Tester l'app rapidement
+→ Lire [QUICKSTART.md](./QUICKSTART.md) (5 min)
+
+### Comprendre le code React
+→ Lire [GUIDE.md](./GUIDE.md) (30 min)
+
+### Déboguer une erreur
+→ Lire [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
+### Configurer le backend
+→ Lire [INTEGRATION_BACKEND.md](./INTEGRATION_BACKEND.md)
+
+---
+
+## 📋 Avant de tester
+
+⚠️ L'API Symfony doit tourner:
+
+```bash
+# Autre terminal, dossier Back
+symfony serve
+```
+
+---
+
+## 🎯 Résumé
+
+- ✅ React + Material-UI
+- ✅ CRUD complet (Create, Read, Update, Delete)
+- ✅ Gestion du chargement & erreurs
+- ✅ Architecture propre & maintenable
+- ✅ Commentaires en français partout
+- ✅ **Parfait pour débutants en React**
+
+---
+
+## 🆘 Besoin d'aide?
+
+1. **Je ne sais pas par où commencer**
+   → Lisez [GUIDE.md](./GUIDE.md)
+
+2. **Ça ne marche pas**
+   → Lisez [TROUBLESHOOTING.md](./TROUBLESHOOTING.md)
+
+3. **Je veux un exemple**
+   → Lisez [EXEMPLES.md](./EXEMPLES.md)
+
+---
+
+**Commencez par:** [QUICKSTART.md](./QUICKSTART.md) ou [GUIDE.md](./GUIDE.md) 🚀
