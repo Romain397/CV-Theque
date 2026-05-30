@@ -7,6 +7,9 @@
 /config/secrets/prod/prod.decrypt.private.php
 /public/bundles/
 /var/
+# Réinclure les fichiers SQLite de la base (on veut versionner la .db du projet)
+!/var/cvtheque.db
+!/var/*.db
 /vendor/
 /.git-backup-before-root-import/
 /.env/
