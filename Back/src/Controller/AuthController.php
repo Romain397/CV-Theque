@@ -111,7 +111,7 @@ final class AuthController extends AbstractController
     }
 
     #[Route('/users/{id}', name: 'user_get', methods: ['GET'])]
-    public function getUser(int $id): JsonResponse
+    public function getUserById(int $id): JsonResponse
     {
         $db = $this->getDb();
         $stmt = $db->prepare('SELECT id,name,email,role,approved,approvedAt,approvedBy FROM users WHERE id = ?');
@@ -146,7 +146,7 @@ final class AuthController extends AbstractController
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
 
-        return $this->getUser($id);
+        return $this->getUserById($id);
     }
 
     #[Route('/users/{id}', name: 'user_delete', methods: ['DELETE'])]
