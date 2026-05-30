@@ -155,7 +155,7 @@ export function EntityDirectory({
         </Paper>
 
         <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid #e5ebf1' }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' } }}>
             <Box>
               <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
                 Recherche
@@ -241,12 +241,12 @@ export function EntityDirectory({
                     },
                   }}
                 >
-                  <Stack direction="row" spacing={1.6} alignItems="flex-start">
+                  <Stack direction="row" spacing={1.6} sx={{ alignItems: 'flex-start' }}>
                     <Avatar sx={{ width: 44, height: 44, bgcolor: '#dceaf7', color: '#214a71', fontWeight: 900 }}>
                       {getInitial(entity.name, emptyLabel[0] || 'A')}
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.6 }}>
+                      <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.6 }}>
                         <Typography variant="caption" sx={{ color: '#45627d', fontWeight: 800 }}>
                           {entity.location || 'Localisation non précisée'}
                         </Typography>
@@ -265,13 +265,13 @@ export function EntityDirectory({
                     {profile.summary}
                   </Typography>
 
-                  <Stack direction="row" flexWrap="wrap" gap={0.8} sx={{ mt: 1.6 }}>
+                  <Stack direction="row" gap={0.8} sx={{ flexWrap: 'wrap', mt: 1.6 }}>
                     {specialties.map((item) => (
                       <Chip key={item} label={item} size="small" sx={{ borderRadius: 99, bgcolor: '#f5efe2', color: '#514832', fontSize: 11, fontWeight: 700, border: '1px solid #e9ddc8' }} />
                     ))}
                   </Stack>
 
-                  <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 2 }}>
+                  <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mt: 2 }}>
                     <Button
                       size="small"
                       endIcon={<PublicIcon />}

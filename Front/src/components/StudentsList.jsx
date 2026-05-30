@@ -175,7 +175,7 @@ export const StudentsList = () => {
             </Box>
 
             <Stack spacing={1.6}>
-              <Stack direction="row" justifyContent={{ xs: 'flex-start', md: 'flex-end' }} spacing={1}>
+              <Stack direction="row" spacing={1} sx={{ justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
                 <Chip label="CVtheque digitale" size="small" sx={{ bgcolor: '#fff', fontWeight: 900 }} />
                 <Chip
                   icon={<DarkModeOutlinedIcon />}
@@ -237,7 +237,7 @@ export const StudentsList = () => {
 
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: '2fr 1fr' }, gap: 2.4, mt: 2 }}>
           <Box>
-            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" spacing={2} sx={{ mb: 2 }}>
+            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', mb: 2 }}>
               <Box>
                 <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
                   Mission produit
@@ -253,7 +253,7 @@ export const StudentsList = () => {
             </Stack>
 
             <Paper elevation={0} sx={{ p: 2, borderRadius: 0, border: '1px solid #e8edf2', mb: 2 }}>
-              <Stack direction={{ xs: 'column', md: 'row' }} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between" spacing={1.5}>
+              <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' } }}>
                 <Box>
                   <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
                     Recherche intelligente
@@ -339,7 +339,7 @@ export const StudentsList = () => {
             <ErrorAlert error={error} onClose={refresh} />
             <LoadingIndicator loading={loading} />
 
-            <Stack direction="row" justifyContent="space-between" alignItems="end" sx={{ mb: 1.5 }}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'end', mb: 1.5 }}>
               <Box>
                 <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
                   Selection de profils
@@ -376,7 +376,7 @@ export const StudentsList = () => {
               {activeProfile ? (
                 <>
                   <Box sx={{ p: 2.3, bgcolor: '#f8fafc' }}>
-                    <Stack direction="row" spacing={1.6} alignItems="center">
+                    <Stack direction="row" spacing={1.6} sx={{ alignItems: 'center' }}>
                       <Avatar sx={{ bgcolor: '#dceaf7', color: '#214a71', fontWeight: 900 }}>{getInitials(activeProfile)}</Avatar>
                       <Box>
                         <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
@@ -458,7 +458,7 @@ export const StudentsList = () => {
                     </Section>
 
                     <Section title="Competences">
-                      <Stack direction="row" flexWrap="wrap" gap={0.8}>
+                      <Stack direction="row" gap={0.8} sx={{ flexWrap: 'wrap' }}>
                         {(activeProfile.skills?.length ? activeProfile.skills : featuredSkills).slice(0, 5).map((item, index) => (
                           <Chip
                             key={`${item.name}-${index}`}

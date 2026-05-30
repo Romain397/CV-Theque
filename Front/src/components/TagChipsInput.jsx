@@ -42,7 +42,7 @@ export function TagChipsInput({
         </Typography>
       )}
 
-      <Stack direction="row" flexWrap="wrap" gap={0.8} sx={{ mb: 1 }}>
+      <Stack direction="row" gap={0.8} sx={{ flexWrap: 'wrap', mb: 1 }}>
         {normalizedTags.map((tag) => (
           <Chip
             key={tag}

@@ -40,7 +40,7 @@ export const StudentCard = ({ student, selected, onSelect }) => {
         },
       }}
     >
-      <Stack direction="row" spacing={1.6} alignItems="flex-start">
+      <Stack direction="row" spacing={1.6} sx={{ alignItems: 'flex-start' }}>
         <Avatar
           sx={{
             width: 36,
@@ -55,7 +55,7 @@ export const StudentCard = ({ student, selected, onSelect }) => {
         </Avatar>
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.3 }}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.3 }}>
             <Typography variant="caption" sx={{ color: '#45627d', fontWeight: 800 }}>
               {student.location || 'Localisation'}
             </Typography>
@@ -134,7 +134,7 @@ export const StudentCard = ({ student, selected, onSelect }) => {
         équipe projet.
       </Typography>
 
-      <Stack direction="row" flexWrap="wrap" gap={0.8} sx={{ mt: 1.6 }}>
+      <Stack direction="row" gap={0.8} sx={{ flexWrap: 'wrap', mt: 1.6 }}>
         {visibleSkills(student.skills).map((skill, index) => (
           <Chip
             key={`${skill.name}-${index}`}
@@ -165,7 +165,7 @@ export const StudentCard = ({ student, selected, onSelect }) => {
         )}
       </Stack>
 
-      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1.8 }}>
+      <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mt: 1.8 }}>
         <Button
           size="small"
           onClick={(event) => {

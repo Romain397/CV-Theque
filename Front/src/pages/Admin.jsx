@@ -147,7 +147,7 @@ export default function Admin() {
           boxShadow: '0 24px 60px rgba(17, 36, 59, 0.1)',
         }}
       >
-        <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', md: 'center' }} spacing={2}>
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
           <Box>
             <Chip label="Console admin" sx={{ mb: 1, fontWeight: 900 }} />
             <Typography variant="h4" sx={{ fontWeight: 950 }}>
@@ -187,14 +187,14 @@ export default function Admin() {
         </Box>
 
         <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid #e5ebf1' }}>
-          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ xs: 'stretch', md: 'center' }} justifyContent="space-between">
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' } }}>
             <Box>
               <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
                 Recherche et tri
               </Typography>
               <Typography sx={{ fontSize: 20, fontWeight: 900 }}>{filteredUsers.length} comptes visibles</Typography>
             </Box>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ minWidth: { md: 520 } }}>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' }, minWidth: { md: 520 } }}>
               <TextField
                 size="small"
                 fullWidth
@@ -245,8 +245,8 @@ export default function Admin() {
                   }}
                   onClick={() => setSelectedUserId(candidate.id)}
                 >
-                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }}>
-                    <Stack direction="row" spacing={1.6} alignItems="center">
+                  <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }}>
+                    <Stack direction="row" spacing={1.6} sx={{ alignItems: 'center' }}>
                       <Avatar sx={{ bgcolor: '#dceaf7', color: '#214a71', fontWeight: 900 }}>
                         {(candidate.name?.[0] || candidate.email?.[0] || '?').toUpperCase()}
                       </Avatar>
@@ -257,7 +257,7 @@ export default function Admin() {
                       </Box>
                     </Stack>
 
-                    <Stack direction="row" spacing={1} flexWrap="wrap" alignItems="center">
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
                       <Chip label={statusLabel(candidate.approved)} size="small" sx={{ fontWeight: 800, bgcolor: candidate.approved ? '#e7f7ee' : '#fff4db', color: candidate.approved ? '#0f7a3f' : '#9a6700' }} />
                       <Button size="small" variant="outlined" onClick={(event) => { event.stopPropagation(); handleApprove(candidate.id, !candidate.approved); }}>
                         {candidate.approved ? 'Désactiver' : 'Valider'}
@@ -294,7 +294,7 @@ export default function Admin() {
             </Typography>
             {selectedUser ? (
               <Box sx={{ mt: 1.5 }}>
-                <Stack direction="row" spacing={1.5} alignItems="center">
+                <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
                   <Avatar sx={{ bgcolor: '#dceaf7', color: '#214a71', fontWeight: 900 }}>
                     {(selectedUser.name?.[0] || selectedUser.email?.[0] || '?').toUpperCase()}
                   </Avatar>
