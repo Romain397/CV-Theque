@@ -49,16 +49,16 @@ final class AuthController extends AbstractController
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         if (!$user) {
-            return $this->json(['error' => 'Invalid credentials'], 401);
+            return $this->json(['error' => 'Invalid credentials'], 401, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'POST,OPTIONS']);
         }
 
         if (isset($user['approved']) && !$user['approved']) {
-            return $this->json(['error' => 'Account pending approval'], 403);
+            return $this->json(['error' => 'Account pending approval'], 403, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'POST,OPTIONS']);
         }
 
         $token = base64_encode($user['id'] . ':' . $user['email'] . ':' . time());
 
-        return $this->json(['user' => $user, 'token' => $token]);
+        return $this->json(['user' => $user, 'token' => $token], 200, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'POST,OPTIONS']);
     }
 
     #[Route('/register', name: 'api_register', methods: ['POST'])]
@@ -80,7 +80,7 @@ final class AuthController extends AbstractController
         $exists = $db->prepare('SELECT id FROM users WHERE email = ?');
         $exists->execute([$email]);
         if ($exists->fetch()) {
-            return $this->json(['error' => 'Email already used'], 400);
+            return $this->json(['error' => 'Email already used'], 400, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'POST,OPTIONS']);
         }
 
         $stmt = $db->prepare('INSERT INTO users (name,email,password,role,approved,approvedAt,approvedBy) VALUES (?,?,?,?,?,?,?)');
@@ -96,10 +96,10 @@ final class AuthController extends AbstractController
 
         if ($approved) {
             $token = base64_encode($user['id'] . ':' . $user['email'] . ':' . time());
-            return $this->json(['user' => $user, 'token' => $token], 201);
+            return $this->json(['user' => $user, 'token' => $token], 201, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'POST,OPTIONS']);
         }
 
-        return $this->json(['user' => $user, 'pending' => true], 201);
+        return $this->json(['user' => $user, 'pending' => true], 201, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'POST,OPTIONS']);
     }
 
     #[Route('/users', name: 'users_list', methods: ['GET'])]
@@ -107,7 +107,7 @@ final class AuthController extends AbstractController
     {
         $db = $this->getDb();
         $rows = $db->query('SELECT id,name,email,role,approved,approvedAt,approvedBy FROM users ORDER BY id DESC')->fetchAll(\PDO::FETCH_ASSOC);
-        return $this->json($rows);
+        return $this->json($rows, 200, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'GET,OPTIONS']);
     }
 
     #[Route('/users/{id}', name: 'user_get', methods: ['GET'])]
@@ -117,8 +117,8 @@ final class AuthController extends AbstractController
         $stmt = $db->prepare('SELECT id,name,email,role,approved,approvedAt,approvedBy FROM users WHERE id = ?');
         $stmt->execute([(int) $id]);
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
-        if (!$user) return $this->json(['error' => 'Not found'], 404);
-        return $this->json($user);
+        if (!$user) return $this->json(['error' => 'Not found'], 404, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'GET,OPTIONS']);
+        return $this->json($user, 200, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'GET,OPTIONS']);
     }
 
     #[Route('/users/{id}', name: 'user_update', methods: ['PUT'])]
@@ -138,7 +138,7 @@ final class AuthController extends AbstractController
         }
 
         if (count($fields) === 0) {
-            return $this->json(['error' => 'No fields to update'], 400);
+            return $this->json(['error' => 'No fields to update'], 400, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'PUT,OPTIONS']);
         }
 
         $params[] = (int) $id;
@@ -155,6 +155,13 @@ final class AuthController extends AbstractController
         $db = $this->getDb();
         $stmt = $db->prepare('DELETE FROM users WHERE id = ?');
         $stmt->execute([(int) $id]);
-        return $this->json(['message' => 'deleted']);
+        return $this->json(['message' => 'deleted'], 200, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'DELETE,OPTIONS']);
+    }
+
+    // Global OPTIONS handler for CORS preflight
+    #[Route('/{any}', name: 'cors_options', requirements: ['any' => '.*'], methods: ['OPTIONS'])]
+    public function options(): JsonResponse
+    {
+        return new JsonResponse(null, 200, ['Access-Control-Allow-Origin' => '*', 'Access-Control-Allow-Headers' => 'Content-Type', 'Access-Control-Allow-Methods' => 'GET,POST,PUT,DELETE,OPTIONS']);
     }
 }

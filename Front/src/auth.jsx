@@ -39,44 +39,79 @@ function normalizeUsers(users) {
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
-export async function loadUsers(){
+// Synchronous loader used by UI for immediate rendering (reads localStorage).
+// We keep a background sync to update local storage from the backend when possible.
+export function loadUsers(){
   try {
-    const res = await fetch(`${API_URL}/users`);
-    if (!res.ok) throw new Error('Failed to load users');
-    const users = await res.json();
-    return normalizeUsers(users);
-  } catch (e) {
-    // fallback to localStorage if backend unreachable
-    try {
-      const rawUsers = JSON.parse(localStorage.getItem('cv_users') || '[]');
-      const users = normalizeUsers(rawUsers);
-      if (users.length === 0) {
-        localStorage.setItem('cv_users', JSON.stringify([DEFAULT_ADMIN]));
-        return [DEFAULT_ADMIN];
-      }
-      return users;
-    } catch (err) {
+    const rawUsers = JSON.parse(localStorage.getItem('cv_users') || '[]');
+    const users = normalizeUsers(rawUsers);
+    if (users.length === 0) {
+      localStorage.setItem('cv_users', JSON.stringify([DEFAULT_ADMIN]));
       return [DEFAULT_ADMIN];
     }
+
+    if (!users.some((user) => user.role === 'admin' && user.approved)) {
+      const nextId = users.length ? Math.max(...users.map((user) => user.id)) + 1 : DEFAULT_ADMIN.id;
+      const seededUsers = [...users, { ...DEFAULT_ADMIN, id: nextId }];
+      localStorage.setItem('cv_users', JSON.stringify(seededUsers));
+      return seededUsers;
+    }
+
+    const hasChanged = JSON.stringify(rawUsers) !== JSON.stringify(users);
+    if (hasChanged) {
+      localStorage.setItem('cv_users', JSON.stringify(users));
+    }
+
+    return users;
+  } catch (e) {
+    localStorage.setItem('cv_users', JSON.stringify([DEFAULT_ADMIN]));
+    return [DEFAULT_ADMIN];
   }
 }
 
-export async function saveUsers(users){
-  // persist changes by upserting each user via API
-  for (const user of users) {
-    if (user.id) {
-      await fetch(`${API_URL}/users/${user.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
-      });
-    } else {
-      await fetch(`${API_URL}/register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(user),
-      });
+// Save locally immediately, and attempt to persist to backend asynchronously.
+export function saveUsers(users){
+  try {
+    localStorage.setItem('cv_users', JSON.stringify(users));
+  } catch (e) {
+    // ignore
+  }
+
+  // Async persist (best-effort)
+  (async () => {
+    try {
+      for (const user of users) {
+        if (user.id) {
+          await fetch(`${API_URL}/users/${user.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user),
+          });
+        } else {
+          await fetch(`${API_URL}/register`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(user),
+          });
+        }
+      }
+    } catch (e) {
+      // network error — keep local copy
     }
+  })();
+}
+
+// Background sync: try to pull users from backend and update localStorage
+export async function syncUsersFromServer(){
+  try {
+    const res = await fetch(`${API_URL}/users`);
+    if (!res.ok) return null;
+    const users = await res.json();
+    const normalized = normalizeUsers(users);
+    localStorage.setItem('cv_users', JSON.stringify(normalized));
+    return normalized;
+  } catch (e) {
+    return null;
   }
 }
 
@@ -122,6 +157,18 @@ export function AuthProvider({ children }){
       setToken(null);
     }
   }, [user, token]);
+
+  // On mount, try to sync users from server in background (updates localStorage)
+  useEffect(() => {
+    syncUsersFromServer().then((u)=>{
+      if (u) {
+        // if current user no longer approved, clear auth
+        if (user && !u.some((x) => x.id === user.id && x.approved)) {
+          setUser(null); setToken(null);
+        }
+      }
+    });
+  }, []);
 
   async function doLogin(email, password){
     const res = await fetch(`${API_URL}/login`, {
