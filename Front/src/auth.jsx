@@ -80,11 +80,13 @@ export function saveUsers(users){
   // Async persist (best-effort)
   (async () => {
     try {
+      const token = localStorage.getItem('cv_token');
+      const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
       for (const user of users) {
         if (user.id) {
           await fetch(`${API_URL}/users/${user.id}`, {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...authHeader },
             body: JSON.stringify(user),
           });
         } else {
@@ -103,10 +105,11 @@ export function saveUsers(users){
 
 // Background sync: try to pull users from backend and update localStorage
 export async function syncUsersFromServer(){
-  try {
-    const res = await fetch(`${API_URL}/users`);
-    if (!res.ok) return null;
-    const users = await res.json();
+    try {
+      const token = localStorage.getItem('cv_token');
+      const res = await fetch(`${API_URL}/users`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+      if (!res.ok) return null;
+      const users = await res.json();
     const normalized = normalizeUsers(users);
     localStorage.setItem('cv_users', JSON.stringify(normalized));
     return normalized;
@@ -217,7 +220,8 @@ export function AuthProvider({ children }){
     if (!user) return null;
     // fetch fresh user from backend
     try {
-      const res = fetch(`${API_URL}/users/${user.id}`);
+      const token = localStorage.getItem('cv_token');
+      const res = fetch(`${API_URL}/users/${user.id}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
       return res.then((r)=> r.ok ? r.json() : null).then((u)=>{
         if (!u) { setUser(null); setToken(null); return null; }
         const nextUser = { id: u.id, name: u.name, email: u.email, role: u.role, approved: u.approved, profile: u.profile || {} };

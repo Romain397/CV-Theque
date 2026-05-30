@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, loadUsers, saveUsers, getAuthStats } from '../auth';
+import { useAuth, loadUsers, saveUsers, getAuthStats, syncUsersFromServer } from '../auth';
+import * as studentsService from '../services/studentsService';
+import { useToast } from '../components/ToastProvider';
 import {
   Avatar,
   Box,
@@ -34,6 +36,7 @@ export default function Admin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const toast = useToast();
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [role, setRole] = useState('all');
@@ -53,13 +56,25 @@ export default function Admin() {
 
     try {
       setLoading(true);
-      syncUsers();
+      // try to sync from server first, fallback to local storage
+      (async () => {
+        const remote = await syncUsersFromServer();
+        if (remote && Array.isArray(remote) && remote.length) {
+          setUsers(remote);
+        } else {
+          syncUsers();
+        }
+      })();
     } catch (e) {
       setError(String(e));
     } finally {
       setLoading(false);
     }
   }, [user, navigate]);
+
+  // Pagination / page size control
+  const [pageSize, setPageSize] = useState(25);
+  const [page, setPage] = useState(1);
 
   const filteredUsers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -81,6 +96,10 @@ export default function Admin() {
   const selectedUser = filteredUsers.find((candidate) => candidate.id === selectedUserId) || filteredUsers[0] || null;
   const stats = getAuthStats();
 
+  // compute paged results
+  const totalPages = pageSize > 0 ? Math.max(1, Math.ceil(filteredUsers.length / pageSize)) : 1;
+  const pagedUsers = pageSize > 0 ? filteredUsers.slice((page - 1) * pageSize, page * pageSize) : filteredUsers;
+
   const persistUsers = (nextUsers) => {
     saveUsers(nextUsers);
     setUsers(nextUsers);
@@ -88,18 +107,32 @@ export default function Admin() {
   };
 
   const handleApprove = (id, approved) => {
-    const nextUsers = loadUsers().map((candidate) =>
-      candidate.id === id
-        ? {
-            ...candidate,
-            approved,
-            approvedAt: approved ? new Date().toISOString() : null,
-            approvedBy: approved ? user.name : candidate.approvedBy,
-          }
-        : candidate
-    );
-
-    persistUsers(nextUsers);
+    (async () => {
+      try {
+        setLoading(true);
+        // call backend to set approved flag
+        await studentsService.setUserApproved(id, approved);
+        const remote = await syncUsersFromServer();
+        if (remote) setUsers(remote);
+        toast.showToast(approved ? 'Compte validé' : 'Compte désactivé', { severity: 'success' });
+      } catch (e) {
+        // fallback to local change
+        const nextUsers = loadUsers().map((candidate) =>
+          candidate.id === id
+            ? {
+                ...candidate,
+                approved,
+                approvedAt: approved ? new Date().toISOString() : null,
+                approvedBy: approved ? user.name : candidate.approvedBy,
+              }
+            : candidate
+        );
+        persistUsers(nextUsers);
+        toast.showToast('Action appliquée en local (API indisponible)', { severity: 'warning' });
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   const handleRoleChange = (id, nextRole) => {
@@ -120,18 +153,24 @@ export default function Admin() {
 
   const handleDelete = (id) => {
     if (!window.confirm('Confirmer suppression du compte ?')) return;
-
-    const nextUsers = loadUsers().filter((candidate) => candidate.id !== id);
-    persistUsers(nextUsers);
-
-    if (selectedUserId === id) {
-      setSelectedUserId(null);
-    }
-
-    if (user?.id === id) {
-      logout();
-      navigate('/login');
-    }
+    (async () => {
+      try {
+        setLoading(true);
+        await studentsService.deleteStudent(id);
+        const remote = await syncUsersFromServer();
+        if (remote) setUsers(remote);
+        if (selectedUserId === id) setSelectedUserId(null);
+        if (user?.id === id) { logout(); navigate('/login'); }
+        toast.showToast('Compte supprimé', { severity: 'success' });
+      } catch (e) {
+        // fallback: local removal
+        const nextUsers = loadUsers().filter((candidate) => candidate.id !== id);
+        persistUsers(nextUsers);
+        if (selectedUserId === id) setSelectedUserId(null);
+        if (user?.id === id) { logout(); navigate('/login'); }
+        toast.showToast('Suppression appliquée en local (API indisponible)', { severity: 'warning' });
+      } finally { setLoading(false); }
+    })();
   };
 
   if (!user) return null;
@@ -231,7 +270,7 @@ export default function Admin() {
             {loading ? (
               <Typography>Chargement...</Typography>
             ) : filteredUsers.length ? (
-              filteredUsers.map((candidate) => (
+              pagedUsers.map((candidate) => (
                 <Paper
                   key={candidate.id}
                   elevation={0}
@@ -286,6 +325,25 @@ export default function Admin() {
                 <Typography sx={{ fontWeight: 900 }}>Aucun compte ne correspond aux filtres.</Typography>
               </Paper>
             )}
+            {/* pagination controls */}
+            <Box sx={{ mt: 2, display: 'flex', gap: 1, alignItems: 'center' }}>
+              <FormControl size="small" sx={{ minWidth: 140 }}>
+                <InputLabel>Afficher</InputLabel>
+                <Select size="small" label="Afficher" value={pageSize} onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
+                  <MenuItem value={10}>10 / page</MenuItem>
+                  <MenuItem value={25}>25 / page</MenuItem>
+                  <MenuItem value={50}>50 / page</MenuItem>
+                  <MenuItem value={0}>Tous</MenuItem>
+                </Select>
+              </FormControl>
+              {pageSize > 0 && (
+                <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                  <Button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Préc.</Button>
+                  <Typography sx={{ minWidth: 60, textAlign: 'center' }}>Page {page} / {totalPages}</Typography>
+                  <Button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Suiv.</Button>
+                </Box>
+              )}
+            </Box>
           </Box>
 
           <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: '1px solid #e5ebf1', height: 'fit-content', position: { lg: 'sticky' }, top: 20 }}>
@@ -321,6 +379,54 @@ export default function Admin() {
                 <Typography variant="body2" sx={{ color: '#607287', mt: 2 }}>
                   Cette vue peut servir de base pour gérer plus tard les écoles, les entreprises et les étudiants avec les mêmes mécaniques d’approbation et de modification.
                 </Typography>
+                {selectedUser?.profile?.pendingSchoolId && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography sx={{ fontWeight: 900 }}>Demande d'école</Typography>
+                    <Typography variant="body2">École demandée: {selectedUser.profile.pendingSchoolId} — statut: {selectedUser.profile.pendingSchoolStatus || 'pending'}</Typography>
+                    {(user.role === 'admin' || (user.role === 'school' && String(user.id) === String(selectedUser.profile.pendingSchoolId))) && (
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                        <Button variant="contained" color="success" onClick={async () => {
+                          try {
+                            await studentsService.respondPendingSchool(selectedUser.id, 'approve');
+                            const remote = await syncUsersFromServer();
+                            if (remote) setUsers(remote);
+                          } catch (e) { console.error(e); }
+                        }}>Approuver</Button>
+                        <Button variant="outlined" color="error" onClick={async () => {
+                          try {
+                            await studentsService.respondPendingSchool(selectedUser.id, 'reject');
+                            const remote = await syncUsersFromServer();
+                            if (remote) setUsers(remote);
+                          } catch (e) { console.error(e); }
+                        }}>Refuser</Button>
+                      </Stack>
+                    )}
+                  </Box>
+                )}
+                {selectedUser?.profile?.pendingCompanyId && (
+                  <Box sx={{ mt: 2 }}>
+                    <Typography sx={{ fontWeight: 900 }}>Demande d'entreprise</Typography>
+                    <Typography variant="body2">Entreprise demandée: {selectedUser.profile.pendingCompanyId} — statut: {selectedUser.profile.pendingCompanyStatus || 'pending'}</Typography>
+                    {(user.role === 'admin' || (user.role === 'company' && String(user.id) === String(selectedUser.profile.pendingCompanyId))) && (
+                      <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
+                        <Button variant="contained" color="success" onClick={async () => {
+                          try {
+                            await studentsService.respondPendingCompany(selectedUser.id, 'approve');
+                            const remote = await syncUsersFromServer();
+                            if (remote) setUsers(remote);
+                          } catch (e) { console.error(e); }
+                        }}>Approuver</Button>
+                        <Button variant="outlined" color="error" onClick={async () => {
+                          try {
+                            await studentsService.respondPendingCompany(selectedUser.id, 'reject');
+                            const remote = await syncUsersFromServer();
+                            if (remote) setUsers(remote);
+                          } catch (e) { console.error(e); }
+                        }}>Refuser</Button>
+                      </Stack>
+                    )}
+                  </Box>
+                )}
               </Box>
             ) : (
               <Typography sx={{ color: '#607287', mt: 1.5 }}>Sélectionne un compte pour voir son détail.</Typography>

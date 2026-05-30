@@ -24,10 +24,21 @@ class CorsSubscriber implements EventSubscriberInterface
 
         // Handle preflight requests early
         if (strtoupper($request->getMethod()) === 'OPTIONS') {
+            // log preflight for debugging
+            @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[OPTIONS] " . date('c') . " Origin: " . ($request->headers->get('Origin') ?? '') . " Headers: " . json_encode($request->headers->all()) . "\n", FILE_APPEND);
+
+            $origin = $request->headers->get('Origin');
+            $allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174'];
+            $allow = in_array($origin, $allowedOrigins, true) ? $origin : '*';
+
             $response = new Response('', 200);
-            $response->headers->set('Access-Control-Allow-Origin', '*');
-            $response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+            $response->headers->set('Access-Control-Allow-Origin', $allow);
+            $response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+            if ($allow !== '*') {
+                $response->headers->set('Access-Control-Allow-Credentials', 'true');
+            }
+            $response->headers->set('Access-Control-Max-Age', '3600');
             $event->setResponse($response);
         }
     }
@@ -36,8 +47,17 @@ class CorsSubscriber implements EventSubscriberInterface
     {
         $response = $event->getResponse();
         // Add CORS headers to all responses
-        $response->headers->set('Access-Control-Allow-Origin', '*');
-        $response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,OPTIONS');
-        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+        // log responses for debugging
+        @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[RESPONSE] " . date('c') . " Status: " . $response->getStatusCode() . " Headers: " . json_encode($response->headers->all()) . "\n", FILE_APPEND);
+        $origin = $event->getRequest()->headers->get('Origin');
+        $allowedOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174'];
+        $allow = in_array($origin, $allowedOrigins, true) ? $origin : '*';
+        $response->headers->set('Access-Control-Allow-Origin', $allow);
+        $response->headers->set('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+        $response->headers->set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept, X-Requested-With');
+        if ($allow !== '*') {
+            $response->headers->set('Access-Control-Allow-Credentials', 'true');
+        }
+        $response->headers->set('Access-Control-Max-Age', '3600');
     }
 }

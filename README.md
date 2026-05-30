@@ -25,18 +25,52 @@ flowchart LR
 
 ## Démarrage rapide
 
-1. Lancer le projet complet:
+Prérequis locaux:
+
+- `php` (>=8.1 recommandé)
+- `composer` (pour les dépendances PHP)
+- `node` & `npm` (ou `pnpm`/`yarn`) pour le frontend
+- `sqlite3` (facultatif pour inspection)
+
+1) Depuis la racine du projet, installez les dépendances si nécessaire:
+
+```bash
+# PHP (Back)
+cd Back && composer install --no-interaction
+
+# Frontend (Front)
+cd ../Front && npm install
+
+# revenir à la racine
+cd ..
+```
+
+2) Démarrer le projet complet (backend + frontend) :
 
 ```bash
 ./start-dev.sh
 ```
 
-2. Ouvrir les interfaces:
+3) Ou démarrer séparément si vous préférez :
 
-- Front: http://127.0.0.1:5173 ou le port Vite affiché au démarrage
+```bash
+# Backend (dev server PHP intégré)
+cd Back
+# Assure la variable d'environnement pour utiliser la DB locale
+export DATABASE_URL="sqlite:///var/cvtheque.db"
+php -S 127.0.0.1:8000 -t public public/index.php
+
+# Frontend (Vite)
+cd ../Front
+VITE_API_URL="http://127.0.0.1:8000" npm run dev -- --host 127.0.0.1 --port 5173
+```
+
+4) Points d'accès:
+
+- Front: http://127.0.0.1:5173 (ou le port Vite affiché)
 - API Symfony: http://127.0.0.1:8000
 
-3. Compte admin local par défaut:
+5) Compte admin local par défaut (dev only) :
 
 - Email: admin@cvtheque.local
 - Mot de passe: admin123
@@ -58,3 +92,10 @@ flowchart LR
 
 - Le projet local force `DATABASE_URL=sqlite:///var/cvtheque.db` au démarrage.
 - Les pages école, entreprise et profil sont pensées pour être consultées et modifiées comme une vitrine de type LinkedIn.
+
+## Workflow de validation (écoles / entreprises)
+
+- Un étudiant peut "demander" l'association à une école ou une entreprise depuis son profil (champ "Demander une école / entreprise").
+- La demande est conservée dans `profile.pendingSchoolId` / `profile.pendingCompanyId` et l'état dans `pendingSchoolStatus` / `pendingCompanyStatus` (valeurs: `pending`, `approved`, `rejected`).
+- Les écoles et entreprises voient dans leur espace connecté la liste des étudiants en attente et peuvent approuver ou refuser chaque demande.
+- L'approbation met à jour `schoolId` / `companyId` pour l'étudiant et marque la demande comme `approved`.

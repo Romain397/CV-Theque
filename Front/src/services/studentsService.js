@@ -21,11 +21,30 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
  * @returns {Promise<Array>} Liste des étudiants
  */
 export const getStudents = async () => {
-  const response = await fetch(`${API_BASE_URL}/students`);
+  const token = localStorage.getItem('cv_token');
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const response = await fetch(`${API_BASE_URL}/users`, { headers });
   if (!response.ok) {
     throw new Error(`Erreur: ${response.status}`);
   }
-  return await response.json();
+  const users = await response.json();
+  // map users with role 'student' to student shape
+  return (users || []).filter(u => u.role === 'student').map(u => ({
+    id: u.id,
+    firstName: u.profile?.firstName || '',
+    lastName: u.profile?.lastName || '',
+    age: u.profile?.age || 0,
+    jobTitle: u.profile?.jobTitle || '',
+    location: u.profile?.location || '',
+    skills: u.profile?.skills || [],
+    school: u.profile?.schoolId ? { id: u.profile.schoolId } : null,
+    company: u.profile?.companyId ? { id: u.profile.companyId } : null,
+    // pending request fields
+    pendingSchoolId: u.profile?.pendingSchoolId || null,
+    pendingSchoolStatus: u.profile?.pendingSchoolStatus || null,
+    pendingCompanyId: u.profile?.pendingCompanyId || null,
+    pendingCompanyStatus: u.profile?.pendingCompanyStatus || null,
+  }));
 };
 
 /**
@@ -38,11 +57,29 @@ export const getStudents = async () => {
  * @returns {Promise<Object>} Les données de l'étudiant
  */
 export const getStudentById = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/students/${id}`);
+  const token = localStorage.getItem('cv_token');
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const response = await fetch(`${API_BASE_URL}/users/${id}`, { headers });
   if (!response.ok) {
     throw new Error(`Erreur: ${response.status}`);
   }
-  return await response.json();
+  const u = await response.json();
+  if (!u) return null;
+  return {
+    id: u.id,
+    firstName: u.profile?.firstName || '',
+    lastName: u.profile?.lastName || '',
+    age: u.profile?.age || 0,
+    jobTitle: u.profile?.jobTitle || '',
+    location: u.profile?.location || '',
+    skills: u.profile?.skills || [],
+    school: u.profile?.schoolId ? { id: u.profile.schoolId } : null,
+    company: u.profile?.companyId ? { id: u.profile.companyId } : null,
+    pendingSchoolId: u.profile?.pendingSchoolId || null,
+    pendingSchoolStatus: u.profile?.pendingSchoolStatus || null,
+    pendingCompanyId: u.profile?.pendingCompanyId || null,
+    pendingCompanyStatus: u.profile?.pendingCompanyStatus || null,
+  };
 };
 
 /**
@@ -61,11 +98,11 @@ export const getStudentById = async (id) => {
  * @returns {Promise<Object>} L'étudiant créé (avec l'ID assigné par l'API)
  */
 export const createStudent = async (studentData) => {
-  const response = await fetch(`${API_BASE_URL}/students`, {
+  const token = localStorage.getItem('cv_token');
+  const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  const response = await fetch(`${API_BASE_URL}/register`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify(studentData),
   });
   if (!response.ok) {
@@ -88,16 +125,52 @@ export const createStudent = async (studentData) => {
  * @returns {Promise<Object>} L'étudiant mis à jour
  */
 export const updateStudent = async (id, studentData) => {
-  const response = await fetch(`${API_BASE_URL}/students/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(studentData),
-  });
-  if (!response.ok) {
-    throw new Error(`Erreur: ${response.status}`);
+  const token = localStorage.getItem('cv_token');
+  const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify({ profile: studentData }),
+    });
+  } catch (fetchErr) {
+    // network or CORS-preflight blocked the request — attempt fallback
+    try {
+      const formHeaders = { 'Content-Type': 'application/x-www-form-urlencoded', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+      const params = new URLSearchParams();
+        params.set('profile', JSON.stringify(studentData));
+        if (token) params.set('token', token);
+      const fallback = await fetch(`${API_BASE_URL}/users/${id}/profile-form`, {
+        method: 'POST',
+        headers: formHeaders,
+        body: params.toString(),
+      });
+      if (!fallback.ok) throw new Error(`Fallback failed: ${fallback.status}`);
+      return await fallback.json();
+    } catch (err) {
+      throw new Error(`Erreur fetch: ${fetchErr?.message} / fallback: ${err?.message}`);
+    }
   }
+
+  if (!response.ok) {
+    // try fallback when server returned non-OK (e.g., 4xx from preflight policies)
+    try {
+      const formHeaders = { 'Content-Type': 'application/x-www-form-urlencoded', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+      const params = new URLSearchParams();
+      params.set('profile', JSON.stringify(studentData));
+      const fallback = await fetch(`${API_BASE_URL}/users/${id}/profile-form`, {
+        method: 'POST',
+        headers: formHeaders,
+        body: params.toString(),
+      });
+      if (!fallback.ok) throw new Error(`Fallback failed: ${fallback.status}`);
+      return await fallback.json();
+    } catch (err) {
+      throw new Error(`Erreur: ${response.status} / fallback: ${err?.message}`);
+    }
+  }
+
   return await response.json();
 };
 
@@ -111,10 +184,58 @@ export const updateStudent = async (id, studentData) => {
  * @returns {Promise<void>}
  */
 export const deleteStudent = async (id) => {
-  const response = await fetch(`${API_BASE_URL}/students/${id}`, {
+  const token = localStorage.getItem('cv_token');
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: 'DELETE',
+    headers,
   });
   if (!response.ok) {
     throw new Error(`Erreur: ${response.status}`);
   }
+};
+
+/**
+ * Set user approved/unapproved via PATCH
+ */
+export const setUserApproved = async (id, approved) => {
+  const token = localStorage.getItem('cv_token');
+  const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ approved: approved ? 1 : 0 }),
+  });
+  if (!response.ok) {
+    throw new Error(`Erreur: ${response.status}`);
+  }
+  return await response.json();
+};
+
+export const respondPendingSchool = async (id, action) => {
+  const token = localStorage.getItem('cv_token');
+  const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  const response = await fetch(`${API_BASE_URL}/users/${id}/pending-school`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ action }),
+  });
+  if (!response.ok) {
+    throw new Error(`Erreur: ${response.status}`);
+  }
+  return await response.json();
+};
+
+export const respondPendingCompany = async (id, action) => {
+  const token = localStorage.getItem('cv_token');
+  const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+  const response = await fetch(`${API_BASE_URL}/users/${id}/pending-company`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ action }),
+  });
+  if (!response.ok) {
+    throw new Error(`Erreur: ${response.status}`);
+  }
+  return await response.json();
 };

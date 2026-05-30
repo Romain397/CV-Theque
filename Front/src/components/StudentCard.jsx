@@ -13,7 +13,7 @@ import { Link as RouterLink } from 'react-router-dom';
 const initials = (student) =>
   `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`.toUpperCase() || 'PR';
 
-const visibleSkills = (skills = []) => skills.slice(0, 3);
+const visibleSkills = (skills = []) => skills; // show all skills for full profile display
 
 export const StudentCard = ({ student, selected, onSelect }) => {
   const schoolHref = student.school?.id ? `/schools/${student.school.id}` : null;

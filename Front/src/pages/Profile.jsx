@@ -125,9 +125,17 @@ export default function Profile() {
   }, [user]);
 
   useEffect(() => {
-    if (!entityType || !selectedCollection.length) return;
+    if (!entityType) return;
 
-    const bindingKey = entityType === 'student' ? 'studentId' : entityType === 'school' ? 'schoolId' : 'companyId';
+    // For students, the account IS the public profile: bind to current user id
+    if (entityType === 'student') {
+      setSelectedEntityId(String(user.id));
+      return;
+    }
+
+    if (!selectedCollection.length) return;
+
+    const bindingKey = entityType === 'school' ? 'schoolId' : 'companyId';
     const persistedId = user?.profile?.[bindingKey];
     const fallbackId = selectedCollection[0]?.id;
 
@@ -135,22 +143,28 @@ export default function Profile() {
   }, [entityType, selectedCollection, user]);
 
   useEffect(() => {
-    if (!selectedEntity) {
-      setEntityDraft({});
+    if (entityType === 'student') {
+      // use current user's profile as the editable entity
+      const p = user.profile || {};
+      setEntityDraft({
+        firstName: p.firstName || '',
+        lastName: p.lastName || '',
+        age: p.age ?? '',
+        jobTitle: p.jobTitle || '',
+        location: p.location || '',
+        schoolId: p.schoolId || '',
+        companyId: p.companyId || '',
+        skillsTags: tagsToList(p.skills || []),
+        pendingSchoolId: p.pendingSchoolId || null,
+        pendingSchoolStatus: p.pendingSchoolStatus || null,
+        pendingCompanyId: p.pendingCompanyId || null,
+        pendingCompanyStatus: p.pendingCompanyStatus || null,
+      });
       return;
     }
 
-    if (entityType === 'student') {
-      setEntityDraft({
-        firstName: selectedEntity.firstName || '',
-        lastName: selectedEntity.lastName || '',
-        age: selectedEntity.age ?? '',
-        jobTitle: selectedEntity.jobTitle || '',
-        location: selectedEntity.location || '',
-        schoolId: selectedEntity.school?.id || '',
-        companyId: selectedEntity.company?.id || '',
-        skillsTags: tagsToList(selectedEntity.skills),
-      });
+    if (!selectedEntity) {
+      setEntityDraft({});
       return;
     }
 
@@ -158,10 +172,45 @@ export default function Profile() {
       setEntityDraft({
         name: selectedEntity.name || '',
         location: selectedEntity.location || '',
-        specialtiesTags: tagsToList(selectedEntity.specialties),
+        specialtiesTags: tagsToList(selectedEntity.specialties || []),
       });
     }
   }, [entityType, selectedEntity]);
+
+  // Poll backend to detect when a pending company request has been processed.
+  useEffect(() => {
+    if (entityType !== 'student') return undefined;
+    const pendingCompanyId = entityDraft?.pendingCompanyId;
+    const pendingCompanyStatus = entityDraft?.pendingCompanyStatus;
+    if (!pendingCompanyId || pendingCompanyStatus !== 'pending') return undefined;
+
+    let mounted = true;
+    const interval = setInterval(async () => {
+      try {
+        const updated = await refreshUser();
+        if (!mounted) return;
+        if (updated && updated.profile) {
+          // if the pendingCompanyId was removed or status changed, stop polling
+          const p = updated.profile || {};
+          if (!p.pendingCompanyId || (p.pendingCompanyStatus && p.pendingCompanyStatus !== 'pending')) {
+            setEntityDraft((prev) => ({ ...prev, pendingCompanyId: p.pendingCompanyId || null, pendingCompanyStatus: p.pendingCompanyStatus || null, companyId: p.companyId || prev.companyId }));
+            setMessage({ type: 'success', text: 'Mise à jour reçue : le statut de votre demande a changé.' });
+            // also refresh local students list to reflect company assignment
+            const refreshedStudents = await studentsService.getStudents().catch(() => null);
+            if (refreshedStudents) setStudents(refreshedStudents);
+            clearInterval(interval);
+          }
+        }
+      } catch (e) {
+        // ignore network errors, continue polling
+      }
+    }, 5000);
+
+    return () => {
+      mounted = false;
+      clearInterval(interval);
+    };
+  }, [entityType, entityDraft?.pendingCompanyId, entityDraft?.pendingCompanyStatus, refreshUser]);
 
   const bindingKey = entityType === 'student' ? 'studentId' : entityType === 'school' ? 'schoolId' : entityType === 'company' ? 'companyId' : null;
 
@@ -170,6 +219,37 @@ export default function Profile() {
       ...previous,
       [name]: value,
     }));
+  };
+
+  const pendingRequests = useMemo(() => {
+    if (!selectedEntity) return [];
+    if (entityType === 'school') {
+      return (students || []).filter((s) => String(s.pendingSchoolId) === String(selectedEntity.id) && s.pendingSchoolStatus === 'pending');
+    }
+    if (entityType === 'company') {
+      return (students || []).filter((s) => String(s.pendingCompanyId) === String(selectedEntity.id) && s.pendingCompanyStatus === 'pending');
+    }
+    return [];
+  }, [students, selectedEntity, entityType]);
+
+  const handleRespondPending = async (studentId, action) => {
+    if (!studentId) return;
+    setSaving(true);
+    setMessage(null);
+    try {
+      if (entityType === 'school') {
+        await studentsService.respondPendingSchool(studentId, action);
+      } else if (entityType === 'company') {
+        await studentsService.respondPendingCompany(studentId, action);
+      }
+      const refreshed = await studentsService.getStudents();
+      setStudents(refreshed || []);
+      setMessage({ type: 'success', text: 'Action enregistrée.' });
+    } catch (err) {
+      setMessage({ type: 'error', text: err?.message || 'Impossible d’effectuer l’action.' });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const addSharedTag = (tag) => {
@@ -208,7 +288,9 @@ export default function Profile() {
       let nextAccountName = accountDraft.displayName || user.name;
 
       if (entityType === 'student') {
-        updatedEntity = await studentsService.updateStudent(selectedEntityId, {
+        // update the user's own profile directly
+        const targetId = String(user.id);
+        const payload = {
           firstName: entityDraft.firstName || '',
           lastName: entityDraft.lastName || '',
           age: Number(entityDraft.age || 0),
@@ -217,7 +299,15 @@ export default function Profile() {
           schoolId: entityDraft.schoolId || '',
           companyId: entityDraft.companyId || '',
           skills: skillsToPayload(entityDraft.skillsTags || []),
-        });
+        };
+        // if a new school or company was requested, send them as pending fields inside profile
+        if (entityDraft.pendingSchoolId || entityDraft.pendingCompanyId) {
+          payload.profile = {
+            ...(entityDraft.pendingSchoolId ? { pendingSchoolId: entityDraft.pendingSchoolId, pendingSchoolStatus: 'pending' } : {}),
+            ...(entityDraft.pendingCompanyId ? { pendingCompanyId: entityDraft.pendingCompanyId, pendingCompanyStatus: 'pending' } : {}),
+          };
+        }
+        updatedEntity = await studentsService.updateStudent(targetId, payload);
 
         nextAccountName = `${updatedEntity.firstName || ''} ${updatedEntity.lastName || ''}`.trim() || nextAccountName;
       }
@@ -242,17 +332,43 @@ export default function Profile() {
         nextAccountName = updatedEntity.name || nextAccountName;
       }
 
-      updateUserRecord(user.id, (record) => ({
-        ...record,
-        name: nextAccountName,
-        profile: {
+      updateUserRecord(user.id, (record) => {
+        const baseProfile = {
           ...(record.profile || {}),
           displayName: accountDraft.displayName || nextAccountName,
           headline: accountDraft.headline || '',
           bio: accountDraft.bio || '',
-          [bindingKey]: String(selectedEntityId),
-        },
-      }));
+        };
+
+        // If student, merge updatedEntity fields into profile
+        const mergedProfile = entityType === 'student' && updatedEntity
+          ? {
+              ...baseProfile,
+              firstName: updatedEntity.firstName || baseProfile.firstName || '',
+              lastName: updatedEntity.lastName || baseProfile.lastName || '',
+              age: updatedEntity.age || baseProfile.age || 0,
+              jobTitle: updatedEntity.jobTitle || baseProfile.jobTitle || '',
+              location: updatedEntity.location || baseProfile.location || '',
+              skills: updatedEntity.skills || baseProfile.skills || [],
+              schoolId: updatedEntity.schoolId || baseProfile.schoolId || '',
+              companyId: updatedEntity.companyId || baseProfile.companyId || '',
+            }
+          : baseProfile;
+
+        // reflect pending fields if present (school + company)
+        if (entityType === 'student' && updatedEntity && updatedEntity.profile && mergedProfile) {
+          mergedProfile.pendingSchoolId = updatedEntity.profile.pendingSchoolId || baseProfile.pendingSchoolId || null;
+          mergedProfile.pendingSchoolStatus = updatedEntity.profile.pendingSchoolStatus || baseProfile.pendingSchoolStatus || null;
+          mergedProfile.pendingCompanyId = updatedEntity.profile.pendingCompanyId || baseProfile.pendingCompanyId || null;
+          mergedProfile.pendingCompanyStatus = updatedEntity.profile.pendingCompanyStatus || baseProfile.pendingCompanyStatus || null;
+        }
+
+        return {
+          ...record,
+          name: nextAccountName,
+          profile: mergedProfile,
+        };
+      });
 
       refreshUser();
       setMessage({ type: 'success', text: 'Profil enregistré et tags rendus disponibles dans les recherches.' });
@@ -356,20 +472,22 @@ export default function Profile() {
                   </Typography>
                 </Stack>
 
-                <FormControl fullWidth>
-                  <InputLabel>Choisir le profil</InputLabel>
-                  <Select
-                    label="Choisir le profil"
-                    value={selectedEntityId}
-                    onChange={(event) => setSelectedEntityId(event.target.value)}
-                  >
-                    {selectedCollection.map((item) => (
-                      <MenuItem key={item.id} value={String(item.id)}>
-                        {item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim()}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
+                {entityType !== 'student' && (
+                  <FormControl fullWidth>
+                    <InputLabel>Choisir le profil</InputLabel>
+                    <Select
+                      label="Choisir le profil"
+                      value={selectedEntityId}
+                      onChange={(event) => setSelectedEntityId(event.target.value)}
+                    >
+                      {selectedCollection.map((item) => (
+                        <MenuItem key={item.id} value={String(item.id)}>
+                          {item.name || `${item.firstName || ''} ${item.lastName || ''}`.trim()}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                )}
 
                 {entityType === 'student' && (
                   <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 2 }}>
@@ -378,16 +496,31 @@ export default function Profile() {
                     <TextField label="Âge" type="number" value={entityDraft.age || ''} onChange={(event) => handleEntityFieldChange('age', event.target.value)} />
                     <TextField label="Poste recherché" value={entityDraft.jobTitle || ''} onChange={(event) => handleEntityFieldChange('jobTitle', event.target.value)} />
                     <TextField label="Localisation" value={entityDraft.location || ''} onChange={(event) => handleEntityFieldChange('location', event.target.value)} />
+                    <Box>
+                      <Typography sx={{ fontSize: 12, color: '#627386', mb: 0.5 }}>École actuelle</Typography>
+                      <TextField value={
+                        (schools.find(s => String(s.id) === String(entityDraft.schoolId)) || {}).name || 'Aucune école'
+                      } disabled fullWidth />
+                    </Box>
                     <FormControl>
-                      <InputLabel>École</InputLabel>
-                      <Select label="École" value={entityDraft.schoolId || ''} onChange={(event) => handleEntityFieldChange('schoolId', event.target.value)}>
-                        <MenuItem value="">Aucune école</MenuItem>
+                      <InputLabel>Demander une école (nouvelle)</InputLabel>
+                      <Select
+                        label="Demander une école (nouvelle)"
+                        value={entityDraft.pendingSchoolId || ''}
+                        onChange={(event) => handleEntityFieldChange('pendingSchoolId', event.target.value)}
+                      >
+                        <MenuItem value="">Aucune</MenuItem>
                         {schools.map((school) => (
                           <MenuItem key={school.id} value={String(school.id)}>
                             {school.name}
                           </MenuItem>
                         ))}
                       </Select>
+                      {entityDraft.pendingSchoolId && (
+                        <Typography variant="caption" sx={{ color: '#8a6d2f', mt: 0.5 }}>
+                          Demande envoyée — en attente de validation par l'école.
+                        </Typography>
+                      )}
                     </FormControl>
                     <FormControl>
                       <InputLabel>Entreprise</InputLabel>
@@ -399,6 +532,26 @@ export default function Profile() {
                           </MenuItem>
                         ))}
                       </Select>
+                    </FormControl>
+                    <FormControl>
+                      <InputLabel>Demander une entreprise (nouvelle)</InputLabel>
+                      <Select
+                        label="Demander une entreprise (nouvelle)"
+                        value={entityDraft.pendingCompanyId || ''}
+                        onChange={(event) => handleEntityFieldChange('pendingCompanyId', event.target.value)}
+                      >
+                        <MenuItem value="">Aucune</MenuItem>
+                        {companies.map((company) => (
+                          <MenuItem key={company.id} value={String(company.id)}>
+                            {company.name}
+                          </MenuItem>
+                        ))}
+                      </Select>
+                      {entityDraft.pendingCompanyId && (
+                        <Typography variant="caption" sx={{ color: '#8a6d2f', mt: 0.5 }}>
+                          Demande envoyée — en attente de validation par l'entreprise.
+                        </Typography>
+                      )}
                     </FormControl>
                     <Box sx={{ gridColumn: { md: '1 / -1' } }}>
                       <TagChipsInput
@@ -425,6 +578,32 @@ export default function Profile() {
                         placeholder="React, UI / UX, Cloud"
                       />
                     </Box>
+                  </Box>
+                )}
+                {/* Pending requests for schools/companies */}
+                {(entityType === 'school' || entityType === 'company') && selectedEntity && (
+                  <Box sx={{ mt: 2, mb: 2 }}>
+                    <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
+                      Demandes en attente
+                    </Typography>
+                    {pendingRequests.length === 0 ? (
+                      <Typography variant="body2" sx={{ color: '#607287', mt: 1 }}>
+                        Aucune demande en attente pour le moment.
+                      </Typography>
+                    ) : (
+                      pendingRequests.map((s) => (
+                        <Paper key={s.id} sx={{ p: 1.5, mt: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <Box>
+                            <Typography sx={{ fontWeight: 800 }}>{s.firstName} {s.lastName}</Typography>
+                            <Typography variant="body2" sx={{ color: '#607287' }}>{(s.skills || []).map(k => k.name || k).join(', ')}</Typography>
+                          </Box>
+                          <Stack direction="row" spacing={1}>
+                            <Button size="small" variant="contained" color="success" disabled={saving} onClick={() => handleRespondPending(s.id, 'approve')}>Approuver</Button>
+                            <Button size="small" variant="outlined" color="error" disabled={saving} onClick={() => handleRespondPending(s.id, 'reject')}>Refuser</Button>
+                          </Stack>
+                        </Paper>
+                      ))
+                    )}
                   </Box>
                 )}
               </Box>

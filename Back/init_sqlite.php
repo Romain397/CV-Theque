@@ -166,9 +166,9 @@ try {
         // Insert sample users
         $now = (new DateTime())->format('Y-m-d H:i:s');
         $stmt = $db->prepare('INSERT INTO users (name,email,password,role) VALUES (?,?,?,?)');
-        $stmt->execute(['Alice Etudiant','alice@example.com','password','student']);
+        $stmt->execute(['Alice Etudiant','alice@example.com',password_hash('password', PASSWORD_DEFAULT),'student']);
         $studentId = $db->lastInsertId();
-        $stmt->execute(['Acme Corp','hr@acme.example','password','company']);
+        $stmt->execute(['Acme Corp','hr@acme.example',password_hash('password', PASSWORD_DEFAULT),'company']);
         $companyId = $db->lastInsertId();
 
         // student profile

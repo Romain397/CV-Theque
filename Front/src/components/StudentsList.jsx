@@ -53,8 +53,8 @@ export const StudentsList = () => {
   const [level, setLevel] = useState('');
   const [skill, setSkill] = useState('');
   const [sort, setSort] = useState('featured');
-  const maxVisibleProfiles = 6;
-
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
   const filteredStudents = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     const results = students.filter((student) => {
@@ -78,10 +78,9 @@ export const StudentsList = () => {
     return results;
   }, [level, search, skill, sort, students]);
 
-  const visibleStudents = useMemo(
-    () => filteredStudents.slice(0, maxVisibleProfiles),
-    [filteredStudents]
-  );
+  const visibleStudents = useMemo(() => filteredStudents, [filteredStudents]);
+  const totalPages = Math.max(1, Math.ceil(visibleStudents.length / pageSize));
+  const paginated = useMemo(() => visibleStudents.slice((page - 1) * pageSize, page * pageSize), [visibleStudents, page, pageSize]);
 
   const featuredSkills = useMemo(() => {
     const skills = students.flatMap((student) => student.skills || []);
@@ -359,16 +358,30 @@ export const StudentsList = () => {
               </Paper>
             ) : (
               <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: 'repeat(2, 1fr)' }, gap: 1.6 }}>
-                {visibleStudents.map((student) => (
-                  <StudentCard
-                    key={student.id}
-                    student={student}
-                    selected={activeProfile?.id === student.id}
-                    onSelect={setSelectedStudent}
-                  />
-                ))}
+                    {paginated.map((student) => (
+                      <StudentCard
+                        key={student.id}
+                        student={student}
+                        selected={activeProfile?.id === student.id}
+                        onSelect={setSelectedStudent}
+                      />
+                    ))}
               </Box>
             )}
+
+                <Stack direction="row" spacing={1} sx={{ mt: 2, alignItems: 'center' }}>
+                  <Button disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>Précédent</Button>
+                  <Typography sx={{ mx: 1 }}>{page} / {totalPages}</Typography>
+                  <Button disabled={page >= totalPages} onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Suivant</Button>
+                  <FormControl size="small" sx={{ ml: 2 }}>
+                    <InputLabel>Par page</InputLabel>
+                    <Select value={pageSize} label="Par page" onChange={(e) => { setPageSize(Number(e.target.value)); setPage(1); }}>
+                      <MenuItem value={6}>6</MenuItem>
+                      <MenuItem value={12}>12</MenuItem>
+                      <MenuItem value={24}>24</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Stack>
           </Box>
 
           <Box sx={{ position: { lg: 'sticky' }, top: 20, alignSelf: 'start' }}>

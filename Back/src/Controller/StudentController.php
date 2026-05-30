@@ -32,7 +32,8 @@ final class StudentController extends AbstractController
         $data = $this->getRequestData($request);
         $student = new Student();
 
-        $this->hydrateStudent($student, $data, $em);
+        // On create requires all mandatory fields
+        $this->hydrateStudent($student, $data, $em, true);
 
         $em->persist($student);
         $em->flush();
@@ -44,8 +45,8 @@ final class StudentController extends AbstractController
     public function update(Student $student, Request $request, EntityManagerInterface $em): JsonResponse
     {
         $data = $this->getRequestData($request);
-
-        $this->hydrateStudent($student, $data, $em);
+        // For updates allow partial payloads (student can edit any subset of fields)
+        $this->hydrateStudent($student, $data, $em, false);
         $em->flush();
 
         return $this->json($this->formatStudent($student));
@@ -73,20 +74,34 @@ final class StudentController extends AbstractController
         return $data;
     }
 
-    private function hydrateStudent(Student $student, array $data, EntityManagerInterface $em): void
+    private function hydrateStudent(Student $student, array $data, EntityManagerInterface $em, bool $requireAll = true): void
     {
-        foreach (['firstName', 'lastName', 'age', 'jobTitle', 'location'] as $field) {
-            if (!array_key_exists($field, $data)) {
-                throw new BadRequestHttpException(sprintf('Missing field "%s".', $field));
+        $fields = ['firstName', 'lastName', 'age', 'jobTitle', 'location'];
+
+        if ($requireAll) {
+            foreach ($fields as $field) {
+                if (!array_key_exists($field, $data)) {
+                    throw new BadRequestHttpException(sprintf('Missing field "%s".', $field));
+                }
             }
         }
 
-        $student
-            ->setFirstName((string) $data['firstName'])
-            ->setLastName((string) $data['lastName'])
-            ->setAge((int) $data['age'])
-            ->setJobTitle((string) $data['jobTitle'])
-            ->setLocation((string) $data['location']);
+        // Only set fields provided (or set empty defaults when provided as empty string)
+        if (array_key_exists('firstName', $data)) {
+            $student->setFirstName((string) $data['firstName']);
+        }
+        if (array_key_exists('lastName', $data)) {
+            $student->setLastName((string) $data['lastName']);
+        }
+        if (array_key_exists('age', $data)) {
+            $student->setAge((int) ($data['age'] === '' ? 0 : $data['age']));
+        }
+        if (array_key_exists('jobTitle', $data)) {
+            $student->setJobTitle((string) $data['jobTitle']);
+        }
+        if (array_key_exists('location', $data)) {
+            $student->setLocation((string) $data['location']);
+        }
 
         if (array_key_exists('schoolId', $data)) {
             $schoolId = $data['schoolId'];
