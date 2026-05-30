@@ -37,35 +37,48 @@ function normalizeUsers(users) {
   }));
 }
 
-export function loadUsers(){
+const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+export async function loadUsers(){
   try {
-    const rawUsers = JSON.parse(localStorage.getItem('cv_users') || '[]');
-    const users = normalizeUsers(rawUsers);
-    if (users.length === 0) {
-      localStorage.setItem('cv_users', JSON.stringify([DEFAULT_ADMIN]));
+    const res = await fetch(`${API_URL}/users`);
+    if (!res.ok) throw new Error('Failed to load users');
+    const users = await res.json();
+    return normalizeUsers(users);
+  } catch (e) {
+    // fallback to localStorage if backend unreachable
+    try {
+      const rawUsers = JSON.parse(localStorage.getItem('cv_users') || '[]');
+      const users = normalizeUsers(rawUsers);
+      if (users.length === 0) {
+        localStorage.setItem('cv_users', JSON.stringify([DEFAULT_ADMIN]));
+        return [DEFAULT_ADMIN];
+      }
+      return users;
+    } catch (err) {
       return [DEFAULT_ADMIN];
     }
-
-    if (!users.some((user) => user.role === 'admin' && user.approved)) {
-      const nextId = users.length ? Math.max(...users.map((user) => user.id)) + 1 : DEFAULT_ADMIN.id;
-      const seededUsers = [...users, { ...DEFAULT_ADMIN, id: nextId }];
-      localStorage.setItem('cv_users', JSON.stringify(seededUsers));
-      return seededUsers;
-    }
-
-    const hasChanged = JSON.stringify(rawUsers) !== JSON.stringify(users);
-    if (hasChanged) {
-      localStorage.setItem('cv_users', JSON.stringify(users));
-    }
-
-    return users;
-  } catch (e) {
-    localStorage.setItem('cv_users', JSON.stringify([DEFAULT_ADMIN]));
-    return [DEFAULT_ADMIN];
   }
 }
 
-export function saveUsers(users){ localStorage.setItem('cv_users', JSON.stringify(users)); }
+export async function saveUsers(users){
+  // persist changes by upserting each user via API
+  for (const user of users) {
+    if (user.id) {
+      await fetch(`${API_URL}/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      });
+    } else {
+      await fetch(`${API_URL}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(user),
+      });
+    }
+  }
+}
 
 export function getAuthStats() {
   const users = loadUsers();
@@ -111,80 +124,63 @@ export function AuthProvider({ children }){
   }, [user, token]);
 
   async function doLogin(email, password){
-    const users = loadUsers();
-    const found = users.find((u) => u.email === email && u.password === password);
-    if (!found) throw new Error('User not found or invalid credentials');
-    if (!found.approved) {
-      throw new Error('Votre compte est en attente de validation par un administrateur.');
+    const res = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || 'User not found or invalid credentials');
     }
-    const t = 'local-' + Date.now();
+    const payload = await res.json();
+    const found = payload.user;
+    const t = payload.token;
     setUser({ id: found.id, name: found.name, email: found.email, role: found.role, approved: found.approved, profile: found.profile || {} });
     setToken(t); localStorage.setItem('cv_token', t);
     return { user: { id: found.id, name: found.name, email: found.email, role: found.role, approved: found.approved, profile: found.profile || {} }, token: t };
   }
 
   async function doRegister(payload){
-    const users = loadUsers();
-    const id = users.length ? Math.max(...users.map((u)=>u.id)) + 1 : 1;
-    const isBootstrapAdmin = payload.role === 'admin' && !users.some((user) => user.role === 'admin' && user.approved);
-    const record = {
-      id,
-      name: payload.name || payload.firstName || 'Utilisateur',
-      email: payload.email,
-      password: payload.password || 'changeme',
-      role: payload.role || 'student',
-      approved: isBootstrapAdmin,
-      approvedAt: isBootstrapAdmin ? new Date().toISOString() : null,
-      approvedBy: isBootstrapAdmin ? 'system' : null,
-      profile: {
-        headline: '',
-        bio: '',
-        displayName: '',
-        tags: [],
-        schoolId: '',
-        companyId: '',
-        studentId: '',
-      },
-    };
-    users.push(record); saveUsers(users);
-    if (record.approved) {
-      const t = 'local-' + Date.now();
+    const res = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    const body = await res.json();
+    if (!res.ok) {
+      throw new Error(body.error || 'Registration failed');
+    }
+
+    const record = body.user;
+    if (body.token) {
       setUser({ id: record.id, name: record.name, email: record.email, role: record.role, approved: record.approved, profile: record.profile });
-      setToken(t); localStorage.setItem('cv_token', t);
-      return { user: { id: record.id, name: record.name, email: record.email, role: record.role, approved: record.approved, profile: record.profile }, token: t };
+      setToken(body.token); localStorage.setItem('cv_token', body.token);
+      return { user: record, token: body.token };
     }
 
     setUser(null);
     setToken(null);
-    return { user: { id: record.id, name: record.name, email: record.email, role: record.role, approved: record.approved, profile: record.profile }, pending: true };
+    return { user: record, pending: true };
   }
 
   function logout(){ setUser(null); setToken(null); localStorage.removeItem('cv_token'); localStorage.removeItem('cv_auth'); }
 
   function refreshUser() {
     if (!user) return null;
-
-    const users = loadUsers();
-    const persisted = users.find((candidate) => candidate.id === user.id);
-
-    if (!persisted) {
-      setUser(null);
-      setToken(null);
-      return null;
+    // fetch fresh user from backend
+    try {
+      const res = fetch(`${API_URL}/users/${user.id}`);
+      return res.then((r)=> r.ok ? r.json() : null).then((u)=>{
+        if (!u) { setUser(null); setToken(null); return null; }
+        const nextUser = { id: u.id, name: u.name, email: u.email, role: u.role, approved: u.approved, profile: u.profile || {} };
+        setUser(nextUser);
+        localStorage.setItem('cv_auth', JSON.stringify({ user: nextUser, token }));
+        return nextUser;
+      }).catch(()=>{ setUser(null); setToken(null); return null; });
+    } catch (e) {
+      setUser(null); setToken(null); return null;
     }
-
-    const nextUser = {
-      id: persisted.id,
-      name: persisted.name,
-      email: persisted.email,
-      role: persisted.role,
-      approved: persisted.approved,
-      profile: persisted.profile || {},
-    };
-
-    setUser(nextUser);
-    localStorage.setItem('cv_auth', JSON.stringify({ user: nextUser, token }));
-    return nextUser;
   }
 
   return React.createElement(AuthContext.Provider, { value: { user, token, login: doLogin, register: doRegister, logout, refreshUser, loadUsers, saveUsers, updateUserRecord, getAuthStats } }, children);
