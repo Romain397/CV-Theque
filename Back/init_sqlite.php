@@ -24,7 +24,10 @@ try {
       name TEXT,
       email TEXT UNIQUE,
       password TEXT,
-      role TEXT
+      role TEXT,
+      approved INTEGER DEFAULT 0,
+      approvedAt TEXT,
+      approvedBy TEXT
     );
     SQL
     );
@@ -138,6 +141,10 @@ try {
     };
 
     // ensure student_profiles columns
+    $addColumnIfMissing('users', "approved INTEGER DEFAULT 0");
+    $addColumnIfMissing('users', "approvedAt TEXT");
+    $addColumnIfMissing('users', "approvedBy TEXT");
+
     $addColumnIfMissing('student_profiles', "phone TEXT");
     $addColumnIfMissing('student_profiles', "portfolio TEXT");
     $addColumnIfMissing('student_profiles', "availability TEXT");
