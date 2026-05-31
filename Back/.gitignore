@@ -1,16 +1,16 @@
 
 ###> symfony/framework-bundle ###
-/.env.local
-/.env
-/.env.local.php
-/.env.*.local
-/config/secrets/prod/prod.decrypt.private.php
-/public/bundles/
-/var/
+#/.env.local
+#/.env
+#/.env.local.php
+#/.env.*.local
+#/config/secrets/prod/prod.decrypt.private.php
+#/public/bundles/
+#/var/
 # Réinclure les fichiers SQLite de la base (on veut versionner la .db du projet)
-!/var/cvtheque.db
-!/var/*.db
-/vendor/
-/.git-backup-before-root-import/
-/.env/
+#!/var/cvtheque.db
+#!/var/*.db
+#/vendor/
+#/.git-backup-before-root-import/
+#/.env/
 ###< symfony/framework-bundle ###
