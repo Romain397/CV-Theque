@@ -96,7 +96,7 @@ final class AuthController extends AbstractController
         $exists = $db->prepare('SELECT id FROM users WHERE email = ?');
         $exists->execute([$email]);
         if ($exists->fetch()) {
-            return $this->json(['error' => 'Email already used'], 400, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'POST,OPTIONS']);
+            return $this->json(['error' => 'Email already used'], 400);
         }
 
         // hash password before storing
@@ -281,7 +281,7 @@ final class AuthController extends AbstractController
         }
 
         if (count($fields) === 0) {
-            return $this->json(['error' => 'No fields to update'], 400, ['Access-Control-Allow-Origin' => '*','Access-Control-Allow-Headers'=>'Content-Type','Access-Control-Allow-Methods'=>'PUT,OPTIONS']);
+            return $this->json(['error' => 'No fields to update'], 400);
         }
 
         $params[] = (int) $id;
@@ -296,8 +296,6 @@ final class AuthController extends AbstractController
     public function patchUser(int $id, Request $request): JsonResponse
     {
         $raw = $request->getContent();
-        // log incoming PATCH for debugging
-        @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PATCH IN] " . date('c') . " URL: " . $request->getRequestUri() . " Origin: " . ($request->headers->get('Origin') ?? '') . " Auth: " . ($request->headers->get('Authorization') ? 'yes' : 'no') . " Body: " . substr($raw, 0, 4096) . "\n", FILE_APPEND);
         $data = json_decode($raw, true);
         if (!is_array($data)) return $this->json(['error' => 'Invalid JSON'], 400);
 
@@ -327,7 +325,10 @@ final class AuthController extends AbstractController
         // support partial update of profile via `profile` object
         if (array_key_exists('profile', $data) && is_array($data['profile'])) {
             $p = $data['profile'];
-            $profileJsonArr = [];
+            $currentStmt = $db->prepare('SELECT profileJson FROM users WHERE id = ?');
+            $currentStmt->execute([(int)$id]);
+            $currentRow = $currentStmt->fetch(\PDO::FETCH_ASSOC) ?: [];
+            $profileJsonArr = json_decode($currentRow['profileJson'] ?? '{}', true) ?: [];
             foreach (['firstName','lastName','age','jobTitle','location','skills','schoolId','companyId'] as $col) {
                 if (array_key_exists($col, $p)) {
                     if ($col === 'skills') {
@@ -355,7 +356,6 @@ final class AuthController extends AbstractController
         $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = ?';
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
-        @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PATCH DONE] " . date('c') . " URL: " . $request->getRequestUri() . " Status: 200\n", FILE_APPEND);
         return $this->getUserById($id, $request);
     }
 
@@ -489,107 +489,6 @@ final class AuthController extends AbstractController
         return $this->getUserById($id, $request);
     }
 
-    #[Route('/users/{id}/profile-form', name: 'user_profile_form', methods: ['POST'])]
-    public function profileForm(int $id, Request $request): JsonResponse
-    {
-        // Accept form-encoded fallback when JSON preflight is blocked by intermediaries
-        // log headers for debugging auth issues
-        @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PROFILE_FORM IN] " . date('c') . " URL: " . $request->getRequestUri() . " Headers: " . json_encode($request->headers->all()) . "\n", FILE_APPEND);
-        $payload = $this->getTokenPayloadFromRequest($request);
-        if (!$payload) {
-            // try token from form body as a fallback
-            $dataTmp = $request->request->all();
-            if (!empty($dataTmp['token'])) {
-                @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PROFILE_FORM TRY_BODY_TOKEN] " . date('c') . " URL: " . $request->getRequestUri() . "\n", FILE_APPEND);
-                $jwt = $dataTmp['token'];
-                try {
-                    $decoded = JWT::decode($jwt, new Key($this->getJwtSecret(), 'HS256'));
-                    $payload = $decoded;
-                } catch (\Exception $e) {
-                    @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PROFILE_FORM BODY_TOKEN_DECODE_ERROR] " . date('c') . " Error: " . $e->getMessage() . "\n", FILE_APPEND);
-                }
-            }
-        }
-        if (!$payload) {
-            @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PROFILE_FORM AUTH_FAIL] " . date('c') . " URL: " . $request->getRequestUri() . " Authorization: " . ($request->headers->get('Authorization') ?? 'none') . "\n", FILE_APPEND);
-            // Development bypass: allow updating from localhost origins when DEV_AUTH_BYPASS=1
-            $devBypass = ($_ENV['DEV_AUTH_BYPASS'] ?? $_SERVER['DEV_AUTH_BYPASS'] ?? '0') === '1';
-            $origin = $request->headers->get('Origin');
-            $allowedDevOrigins = ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:5174'];
-            if ($devBypass && in_array($origin, $allowedDevOrigins, true)) {
-                @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PROFILE_FORM DEV_BYPASS] " . date('c') . " URL: " . $request->getRequestUri() . " Origin: " . ($origin ?? 'none') . "\n", FILE_APPEND);
-                // Fake payload: owner is the target id (allow user to update their own profile in dev)
-                $payload = (object)['sub' => (int)$id, 'role' => 'student'];
-            } else {
-                return $this->json(['error' => 'Unauthorized'], 401);
-            }
-        }
-        $uid = $payload->sub ?? null;
-        $role = $payload->role ?? null;
-        if ($role !== 'admin' && (int)$uid !== (int)$id) {
-            @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[PROFILE_FORM FORBIDDEN] " . date('c') . " URL: " . $request->getRequestUri() . " token_sub: " . ($uid ?? 'null') . " role: " . ($role ?? 'null') . "\n", FILE_APPEND);
-            return $this->json(['error' => 'Forbidden'], 403);
-        }
-
-        $db = $this->getDb();
-
-        // collect allowed fields from form body
-        $data = $request->request->all();
-
-        $fields = [];
-        $params = [];
-
-        // allow updating profile via a 'profile' JSON string or top-level fields
-        $profileArr = [];
-        if (!empty($data['profile'])) {
-            $decoded = json_decode($data['profile'], true);
-            if (is_array($decoded)) $profileArr = $decoded;
-        }
-        foreach (['pendingSchoolId','pendingSchoolStatus','pendingCompanyId','pendingCompanyStatus','firstName','lastName','age','jobTitle','location'] as $k) {
-            if (array_key_exists($k, $profileArr)) {
-                // top-level column handling
-                if (in_array($k, ['pendingSchoolId','pendingCompanyId'])) {
-                    // store into profileJson
-                    $profileJsonArr[$k] = $profileArr[$k];
-                } elseif ($k === 'age') {
-                    $profileJsonArr[$k] = (int)$profileArr[$k];
-                } else {
-                    $profileJsonArr[$k] = $profileArr[$k];
-                }
-            }
-        }
-
-        // also look for top-level keys
-        foreach (['firstName','lastName','age','jobTitle','location'] as $col) {
-            if (array_key_exists($col, $data)) {
-                if ($col === 'age') $fields[] = "$col = ?";
-                else $fields[] = "$col = ?";
-                $params[] = $data[$col];
-            }
-        }
-
-        // write profileJson if any
-        if (!empty($profileJsonArr)) {
-            $fields[] = 'profileJson = ?';
-            $params[] = json_encode($profileJsonArr);
-        }
-
-        if (count($fields) === 0) return $this->json(['error' => 'No fields to update'], 400);
-        $params[] = (int)$id;
-        $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = ?';
-        $stmt = $db->prepare($sql);
-        $stmt->execute($params);
-
-        return $this->getUserById($id, $request);
-    }
-
-    // Global OPTIONS handler for CORS preflight
-    #[Route('/{any}', name: 'cors_options', requirements: ['any' => '.*'], methods: ['OPTIONS'])]
-    public function options(): JsonResponse
-    {
-        return new JsonResponse(null, 200);
-    }
-
     private function getJwtSecret(): string
     {
         return $_ENV['APP_SECRET'] ?? ($_SERVER['APP_SECRET'] ?? 'devsecret');
@@ -613,7 +512,6 @@ final class AuthController extends AbstractController
             $decoded = JWT::decode($jwt, new Key($this->getJwtSecret(), 'HS256'));
             return $decoded;
         } catch (\Exception $e) {
-            @file_put_contents(__DIR__ . '/../../var/debug_cors.log', "[JWT_DECODE_ERROR] " . date('c') . " Error: " . $e->getMessage() . " Token: " . substr($jwt,0,60) . "\n", FILE_APPEND);
             return null;
         }
     }

@@ -133,7 +133,7 @@
     <parameter key="doctrine.migrations.preferred_em">null</parameter>
     <parameter key="doctrine.migrations.preferred_connection">null</parameter>
     <parameter key="nelmio_cors.map" type="collection">
-      <parameter key="^/students" type="collection"/>
+      <parameter key="^/" type="collection"/>
     </parameter>
     <parameter key="nelmio_cors.defaults" type="collection">
       <parameter key="allow_origin" type="collection">
@@ -143,13 +143,18 @@
       <parameter key="allow_headers" type="collection">
         <parameter>content-type</parameter>
         <parameter>authorization</parameter>
+        <parameter>accept</parameter>
+        <parameter>x-requested-with</parameter>
       </parameter>
       <parameter key="allow_private_network">false</parameter>
-      <parameter key="expose_headers" type="collection"/>
+      <parameter key="expose_headers" type="collection">
+        <parameter>ETag</parameter>
+      </parameter>
       <parameter key="allow_methods" type="collection">
         <parameter>GET</parameter>
         <parameter>POST</parameter>
         <parameter>PUT</parameter>
+        <parameter>PATCH</parameter>
         <parameter>DELETE</parameter>
         <parameter>OPTIONS</parameter>
       </parameter>
@@ -268,11 +273,6 @@
     <service id="App\Entity\Student" class="App\Entity\Student" autowire="true" autoconfigure="true">
       <tag name="container.excluded" source="because it's a Doctrine entity"/>
       <tag name="container.excluded" source="with #[Doctrine\ORM\Mapping\Entity] attribute"/>
-    </service>
-    <service id="App\EventSubscriber\CorsSubscriber" class="App\EventSubscriber\CorsSubscriber" autowire="true" autoconfigure="true">
-      <tag name="kernel.event_subscriber"/>
-      <tag name="container.hot_path"/>
-      <tag name="container.hot_path"/>
     </service>
     <service id="App\Repository\CompanyRepository" class="App\Repository\CompanyRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
@@ -1324,22 +1324,6 @@
           <argument>onResponse</argument>
         </argument>
         <argument>-15</argument>
-      </call>
-      <call method="addListener">
-        <argument>kernel.request</argument>
-        <argument type="collection">
-          <argument type="service_closure" id="App\EventSubscriber\CorsSubscriber"/>
-          <argument>onKernelRequest</argument>
-        </argument>
-        <argument>100</argument>
-      </call>
-      <call method="addListener">
-        <argument>kernel.response</argument>
-        <argument type="collection">
-          <argument type="service_closure" id="App\EventSubscriber\CorsSubscriber"/>
-          <argument>onKernelResponse</argument>
-        </argument>
-        <argument>0</argument>
       </call>
       <call method="addListener">
         <argument>console.error</argument>
@@ -3553,8 +3537,6 @@
     <service id=".abstract.instanceof.App\Entity\School" class="App\Entity\School" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.App\Entity\Student.0.App\Entity\Student" class="App\Entity\Student" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Entity\Student" class="App\Entity\Student" autowire="true" autoconfigure="true" abstract="true"/>
-    <service id=".instanceof.Symfony\Component\EventDispatcher\EventSubscriberInterface.0.App\EventSubscriber\CorsSubscriber" class="App\EventSubscriber\CorsSubscriber" autowire="true" abstract="true"/>
-    <service id=".abstract.instanceof.App\EventSubscriber\CorsSubscriber" class="App\EventSubscriber\CorsSubscriber" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\CompanyRepository" class="App\Repository\CompanyRepository" autowire="true" abstract="true"/>
     <service id=".abstract.instanceof.App\Repository\CompanyRepository" class="App\Repository\CompanyRepository" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepositoryInterface.0.App\Repository\JobOfferRepository" class="App\Repository\JobOfferRepository" autowire="true" abstract="true"/>

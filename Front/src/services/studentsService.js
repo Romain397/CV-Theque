@@ -127,48 +127,13 @@ export const createStudent = async (studentData) => {
 export const updateStudent = async (id, studentData) => {
   const token = localStorage.getItem('cv_token');
   const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-  let response;
-  try {
-    response = await fetch(`${API_BASE_URL}/users/${id}`, {
-      method: 'PATCH',
-      headers,
-      body: JSON.stringify({ profile: studentData }),
-    });
-  } catch (fetchErr) {
-    // network or CORS-preflight blocked the request — attempt fallback
-    try {
-      const formHeaders = { 'Content-Type': 'application/x-www-form-urlencoded', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-      const params = new URLSearchParams();
-        params.set('profile', JSON.stringify(studentData));
-        if (token) params.set('token', token);
-      const fallback = await fetch(`${API_BASE_URL}/users/${id}/profile-form`, {
-        method: 'POST',
-        headers: formHeaders,
-        body: params.toString(),
-      });
-      if (!fallback.ok) throw new Error(`Fallback failed: ${fallback.status}`);
-      return await fallback.json();
-    } catch (err) {
-      throw new Error(`Erreur fetch: ${fetchErr?.message} / fallback: ${err?.message}`);
-    }
-  }
-
+  const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ profile: studentData }),
+  });
   if (!response.ok) {
-    // try fallback when server returned non-OK (e.g., 4xx from preflight policies)
-    try {
-      const formHeaders = { 'Content-Type': 'application/x-www-form-urlencoded', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
-      const params = new URLSearchParams();
-      params.set('profile', JSON.stringify(studentData));
-      const fallback = await fetch(`${API_BASE_URL}/users/${id}/profile-form`, {
-        method: 'POST',
-        headers: formHeaders,
-        body: params.toString(),
-      });
-      if (!fallback.ok) throw new Error(`Fallback failed: ${fallback.status}`);
-      return await fallback.json();
-    } catch (err) {
-      throw new Error(`Erreur: ${response.status} / fallback: ${err?.message}`);
-    }
+    throw new Error(`Erreur: ${response.status}`);
   }
 
   return await response.json();

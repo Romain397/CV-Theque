@@ -66,8 +66,6 @@ trap cleanup EXIT INT TERM
     echo "PHP non trouvé dans le PATH. Installez PHP pour démarrer le backend."
     exit 1
   fi
-  # Enable development auth bypass for local testing when DEV_AUTH_BYPASS=1
-  export DEV_AUTH_BYPASS="${DEV_AUTH_BYPASS:-1}"
   php -S 127.0.0.1:8000 -t public public/index.php
 ) &
 BACK_PID=$!
