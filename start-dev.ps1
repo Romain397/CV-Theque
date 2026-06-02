@@ -176,7 +176,15 @@ if (-not $env:VITE_API_URL) {
 }
 
 Write-GotT "Démarrage du frontend Vite sur http://${HostName}:${FrontPort}"
-$npmProc = Start-Process -FilePath $npmExe -ArgumentList @('run', 'dev', '--', '--host', $HostName, '--port', "$FrontPort", '--strictPort') -WorkingDirectory $FrontDir -NoNewWindow -PassThru
+if ($IsWindows) {
+    $npmLauncher = 'cmd.exe'
+    $npmArgs = @('/c', 'npm', 'run', 'dev', '--', '--host', $HostName, '--port', "$FrontPort", '--strictPort')
+} else {
+    $npmLauncher = $npmExe
+    $npmArgs = @('run', 'dev', '--', '--host', $HostName, '--port', "$FrontPort", '--strictPort')
+}
+
+$npmProc = Start-Process -FilePath $npmLauncher -ArgumentList $npmArgs -WorkingDirectory $FrontDir -NoNewWindow -PassThru
 
 Start-Sleep -Milliseconds 500
 if (-not (Get-Process -Id $npmProc.Id -ErrorAction SilentlyContinue)) {
