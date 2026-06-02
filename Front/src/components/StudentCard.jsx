@@ -81,7 +81,7 @@ export const StudentCard = ({ student, selected, onSelect }) => {
                 height: 18,
                 borderRadius: 99,
                 bgcolor: '#ffbf18',
-                color: 'var(--text-primary)',
+                color: '#102339',
                 fontSize: 10,
                 fontWeight: 900,
               }}

@@ -1,6 +1,6 @@
 {
     "schemaVersion": 3,
-    "fetchedAt": "2026-06-02T20:34:06+00:00",
+    "fetchedAt": "2026-06-02T21:22:35+00:00",
     "items": {
         "2d2a7166eaf504ab96fef12b2839559a157e9305e834696e6f2ec8f3866fc16d": {
             "canonicalTitle": "Alternance - Demenageur",
@@ -533,6 +533,149 @@
                 "Étudiant",
                 "Dynamique"
             ]
+        },
+        "c11821f65021cad57cbe83f68c04cdc844bd1b3b2324a01c74beac56318596a2": {
+            "canonicalTitle": "Backend Developer",
+            "normalizedTags": [
+                "Api",
+                "Node.js",
+                "Backend",
+                "Developer",
+                "Intégration."
+            ],
+            "keywords": [
+                "Backend",
+                "Api",
+                "Developer",
+                "Intégration.",
+                "Node.js"
+            ],
+            "summary": "API et intégration.",
+            "warnings": []
+        },
+        "2134d2248cdf94a078847c078593ae11a87832b05048698bd84bf492c624c84a": {
+            "canonicalTitle": "Frontend Developer",
+            "normalizedTags": [
+                "React",
+                "UI",
+                "Frontend",
+                "Developer",
+                "Conception",
+                "Développement",
+                "Interfaces",
+                "React."
+            ],
+            "keywords": [
+                "Frontend",
+                "Developer",
+                "Conception",
+                "Développement",
+                "Interfaces",
+                "React.",
+                "React"
+            ],
+            "summary": "Conception et développement d'interfaces React.",
+            "warnings": []
+        },
+        "dc29a3dd8644aab8c037be2a8ae1b615b4e2ad2840b6138b68221fc415750de7": {
+            "canonicalTitle": "Frontend Developer React",
+            "normalizedTags": [
+                "React",
+                "Frontend",
+                "UI",
+                "Javascript",
+                "Vite",
+                "Material UI",
+                "Interfaces",
+                "Équipe"
+            ],
+            "keywords": [
+                "React",
+                "Frontend",
+                "Interfaces",
+                "Équipe",
+                "Composants",
+                "Javascript",
+                "Git",
+                "Vite"
+            ],
+            "summary": "Rejoins Acme Corp pour concevoir des interfaces web propres, rapides et agréables à utiliser. Tu travailleras sur des parcours utilisateurs visibles, avec un vrai impact produit et une équipe qui aime livrer régulièrement.",
+            "warnings": []
+        },
+        "8e16e9754fe7ea7d67b1fc50b6fcd4ced451b947de3e01183015131726540b00": {
+            "canonicalTitle": "Backend Developer API",
+            "normalizedTags": [
+                "Backend",
+                "Api",
+                "Node.js",
+                "Sql",
+                "Rest",
+                "Architecture",
+                "Apis",
+                "Profil"
+            ],
+            "keywords": [
+                "Backend",
+                "Api",
+                "Apis",
+                "Node.js",
+                "Rest",
+                "Profil",
+                "Produit",
+                "Interfaces"
+            ],
+            "summary": "Acme Corp recherche un profil backend pour renforcer les APIs utilisées par les équipes produit et les interfaces internes. Le poste est orienté qualité, intégration et fiabilité des services.",
+            "warnings": []
+        },
+        "8d46cc253213290370d327a728bb0ddb40a97d2c4c73b7abb2ce4aa6c320da87": {
+            "canonicalTitle": "CDI - Frontend Developer React",
+            "normalizedTags": [
+                "Cdi",
+                "Temps Plein",
+                "Frontend",
+                "React",
+                "Material UI",
+                "Temps",
+                "Plein",
+                "Interfaces"
+            ],
+            "keywords": [
+                "React",
+                "Cdi",
+                "Frontend",
+                "Temps",
+                "Plein",
+                "Interfaces",
+                "Équipe",
+                "Composants"
+            ],
+            "summary": "CDI - 38 000 - 45 000 € / an - Temps plein Rejoins Acme Corp pour concevoir des interfaces web propres, rapides et agréables à utiliser. Tu travailleras sur des parcours utilisateurs visibles, avec un vrai impact produit et une équipe qui aime livrer régulièrement.",
+            "warnings": []
+        },
+        "80b39d2e41aa50af78f851cc589a2ae4deecc7b78e1d30d72dbf094264250e26": {
+            "canonicalTitle": "Alternance - Backend Developer API",
+            "normalizedTags": [
+                "Alternance",
+                "Backend",
+                "Api",
+                "Node.js",
+                "Apis",
+                "Profil",
+                "Produit",
+                "Interfaces"
+            ],
+            "keywords": [
+                "Backend",
+                "Api",
+                "Apis",
+                "Node.js",
+                "Profil",
+                "Produit",
+                "Interfaces",
+                "Intégration"
+            ],
+            "summary": "Alternance - 900 - 1 400 € / mois - 12 mois Acme Corp recherche un profil backend pour renforcer les APIs utilisées par les équipes produit et les interfaces internes. Le poste est orienté qualité, intégration et fiabilité des services.",
+            "warnings": []
         }
     }
 }

@@ -16,6 +16,13 @@
   --accent: #245a8c;
   --accent-strong: #1b4a76;
   --accent-soft: #dceaf7;
+  --info-chip-bg: #eef4fb;
+  --success-chip-bg: #ecfdf3;
+  --success: #027a48;
+  --warning-chip-bg: #fff4db;
+  --warning: #8a5a00;
+  --error-chip-bg: #fff5f5;
+  --error: #b42318;
   --shadow-soft: rgba(17, 36, 59, 0.08);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -27,17 +34,24 @@
   --page-bg: #0f1720;
   --surface-bg: #16212d;
   --surface-strong: #1b2a38;
-  --surface-soft: #15202b;
+  --surface-soft: #1d2d3d;
   --text-primary: #e8eef5;
   --text-secondary: #a8b7c8;
   --border-color: #294055;
-  --muted-border: #314b63;
-  --muted-bg: #182332;
-  --muted-bg-alt: #1a2633;
+  --muted-border: #4a6580;
+  --muted-bg: #26394d;
+  --muted-bg-alt: #2b4056;
   --muted-text: #b6c4d4;
   --accent: #7ab8ff;
   --accent-strong: #4f9ceb;
-  --accent-soft: #20364f;
+  --accent-soft: #244f76;
+  --info-chip-bg: #24405c;
+  --success-chip-bg: #12382e;
+  --success: #76e4ad;
+  --warning-chip-bg: #403315;
+  --warning: #ffd166;
+  --error-chip-bg: #442225;
+  --error: #ff9a9a;
   --shadow-soft: rgba(0, 0, 0, 0.28);
 }
 

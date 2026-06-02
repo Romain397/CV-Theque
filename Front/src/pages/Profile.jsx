@@ -1065,7 +1065,12 @@ export default function Profile() {
                   label={tag}
                   onClick={() => addSharedTag(tag)}
                   clickable
-                  sx={{ bgcolor: '#eef4fb', fontWeight: 800 }}
+                  sx={{
+                    bgcolor: 'var(--accent-soft)',
+                    color: 'var(--text-primary)',
+                    border: '1px solid var(--border-color)',
+                    fontWeight: 800,
+                  }}
                 />
               )) : (
                 <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>

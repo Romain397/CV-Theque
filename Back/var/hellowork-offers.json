@@ -1,6 +1,6 @@
 {
     "schemaVersion": 2,
-    "fetchedAt": 1780432309,
+    "fetchedAt": 1780435565,
     "offers": [
         {
             "id": "hellowork-79716737",
@@ -13,7 +13,7 @@
             ],
             "source": "HelloWork",
             "externalUrl": "https:\/\/www.hellowork.com\/fr-fr\/emplois\/79716737.html",
-            "publishedAt": "il y a 3 heures",
+            "publishedAt": "il y a 4 heures",
             "company": {
                 "id": "hellowork-company-79716737",
                 "name": "AFTRAL Alternance",
@@ -78,7 +78,7 @@
             ],
             "source": "HelloWork",
             "externalUrl": "https:\/\/www.hellowork.com\/fr-fr\/emplois\/79708324.html",
-            "publishedAt": "il y a 5 heures",
+            "publishedAt": "il y a 6 heures",
             "company": {
                 "id": "hellowork-company-79708324",
                 "name": "AFTRAL Alternance",
@@ -143,7 +143,7 @@
             ],
             "source": "HelloWork",
             "externalUrl": "https:\/\/www.hellowork.com\/fr-fr\/emplois\/79684325.html",
-            "publishedAt": "il y a 11 heures",
+            "publishedAt": "il y a 12 heures",
             "company": {
                 "id": "hellowork-company-79684325",
                 "name": "AFTRAL Alternance",
@@ -207,7 +207,7 @@
             ],
             "source": "HelloWork",
             "externalUrl": "https:\/\/www.hellowork.com\/fr-fr\/emplois\/77490760.html",
-            "publishedAt": "il y a 22 heures",
+            "publishedAt": "il y a 23 heures",
             "company": {
                 "id": "hellowork-company-77490760",
                 "name": "AFTRAL Alternance",

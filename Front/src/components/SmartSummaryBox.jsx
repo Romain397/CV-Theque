@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import * as aiService from '../services/aiService';
+import { useHideExtraActions } from '../uiSettings';
 
 export default function SmartSummaryBox({
   type,
@@ -9,6 +10,7 @@ export default function SmartSummaryBox({
   title = 'Résumé intelligent',
   description = 'Génère un résumé court, propre et homogène pour les cartes et aperçus.',
 }) {
+  const [hideExtraActions] = useHideExtraActions();
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -31,6 +33,10 @@ export default function SmartSummaryBox({
 
   const hasContent = Boolean(summary?.summary || (summary?.highlights || []).length || (summary?.keywords || []).length);
 
+  if (hideExtraActions && !hasContent) {
+    return null;
+  }
+
   return (
     <Box sx={{ mt: 2.5, p: 2.2, borderRadius: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'var(--surface-soft)' }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }}>
@@ -43,16 +49,18 @@ export default function SmartSummaryBox({
           </Typography>
         </Box>
 
-        <Button
-          type="button"
-          variant="contained"
-          onClick={handleGenerate}
-          disabled={loading || !profile}
-          startIcon={<AutoAwesomeOutlinedIcon />}
-          sx={{ textTransform: 'none', fontWeight: 900 }}
-        >
-          {loading ? 'Génération...' : hasContent ? 'Rafraîchir' : 'Générer'}
-        </Button>
+        {!hideExtraActions && (
+          <Button
+            type="button"
+            variant="contained"
+            onClick={handleGenerate}
+            disabled={loading || !profile}
+            startIcon={<AutoAwesomeOutlinedIcon />}
+            sx={{ textTransform: 'none', fontWeight: 900 }}
+          >
+            {loading ? 'Génération...' : hasContent ? 'Rafraîchir' : 'Générer'}
+          </Button>
+        )}
       </Stack>
 
       {error && (

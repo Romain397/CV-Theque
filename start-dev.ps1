@@ -1,70 +1,170 @@
 <#
-PowerShell start script for Windows
-Usage: Open PowerShell, run: .\start-dev.ps1
+Start GotT on Windows PowerShell.
+
+Usage:
+  .\start-dev.ps1
+
+Optional:
+  $env:BACK_PORT = "8000"
+  $env:FRONT_PORT = "5173"
 #>
+
 Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BackDir = Join-Path $ScriptDir 'Back'
 $FrontDir = Join-Path $ScriptDir 'Front'
+$HostName = if ($env:HOST) { $env:HOST } else { '127.0.0.1' }
+$BackPort = if ($env:BACK_PORT) { [int]$env:BACK_PORT } else { 8000 }
+$FrontPort = if ($env:FRONT_PORT) { [int]$env:FRONT_PORT } else { 5173 }
 
-if (-Not (Test-Path (Join-Path $BackDir '.env')) -and (Test-Path (Join-Path $BackDir '.env.example'))) {
+function Write-GotT {
+    param([string]$Message)
+    Write-Host "[GotT] $Message" -ForegroundColor Cyan
+}
+
+function Write-GotTWarning {
+    param([string]$Message)
+    Write-Host "[GotT] $Message" -ForegroundColor Yellow
+}
+
+function Require-Command {
+    param(
+        [string]$Name,
+        [string]$Message
+    )
+
+    if (-not (Get-Command $Name -ErrorAction SilentlyContinue)) {
+        Write-Host "[GotT] $Message" -ForegroundColor Red
+        exit 1
+    }
+}
+
+function Test-PortInUse {
+    param([int]$Port)
+
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $result = $client.BeginConnect($HostName, $Port, $null, $null)
+        $connected = $result.AsyncWaitHandle.WaitOne(150, $false)
+        if ($connected) {
+            $client.EndConnect($result)
+            return $true
+        }
+        return $false
+    } catch {
+        return $false
+    } finally {
+        $client.Close()
+    }
+}
+
+function Find-FreePort {
+    param([int]$StartPort)
+
+    $port = $StartPort
+    while (Test-PortInUse -Port $port) {
+        $port++
+    }
+    return $port
+}
+
+Require-Command php "PHP est introuvable. Installe PHP avant de lancer le backend."
+Require-Command npm "npm est introuvable. Installe Node.js/npm avant de lancer le frontend."
+
+if (-not (Test-Path $BackDir) -or -not (Test-Path $FrontDir)) {
+    Write-Host "[GotT] Lance ce script depuis la racine du projet GotT." -ForegroundColor Red
+    exit 1
+}
+
+if (-not (Test-Path (Join-Path $BackDir '.env')) -and (Test-Path (Join-Path $BackDir '.env.example'))) {
     Copy-Item (Join-Path $BackDir '.env.example') (Join-Path $BackDir '.env') -Force
+    Write-GotT "Back/.env créé depuis Back/.env.example"
 }
 
 New-Item -ItemType Directory -Force -Path (Join-Path $BackDir 'var') | Out-Null
 
-$dbFile = Join-Path $BackDir 'var\cvtheque.db'
-if (-Not (Test-Path $dbFile)) {
-    Write-Output "First run: creating sqlite DB..."
-    if (Test-Path (Join-Path $BackDir 'init_sqlite.php')) {
-        & php (Join-Path $BackDir 'init_sqlite.php')
-    } else {
-        Write-Warning "init_sqlite.php not found in $BackDir"
-    }
+if (-not (Test-Path (Join-Path $BackDir 'vendor'))) {
+    Require-Command composer "Composer est introuvable. Installe Composer ou lance composer install dans Back."
+    Write-GotT "Installation des dépendances PHP..."
+    Push-Location $BackDir
+    composer install --no-interaction
+    Pop-Location
 }
 
-if (-Not (Test-Path (Join-Path $BackDir 'vendor'))) {
-    if (Get-Command composer -ErrorAction SilentlyContinue) {
-        Write-Output "Installing PHP dependencies (composer install)..."
-        Push-Location $BackDir
-        composer install --no-interaction
-        Pop-Location
-    } else {
-        Write-Warning "Composer not found — run 'composer install' in $BackDir if needed."
-    }
+if (-not (Test-Path (Join-Path $FrontDir 'node_modules'))) {
+    Write-GotT "Installation des dépendances frontend..."
+    Push-Location $FrontDir
+    npm install
+    Pop-Location
 }
 
-if (-Not (Test-Path (Join-Path $FrontDir 'node_modules'))) {
-    if (Get-Command npm -ErrorAction SilentlyContinue) {
-        Write-Output "Installing frontend dependencies (npm install)..."
-        Push-Location $FrontDir
-        npm install
-        Pop-Location
-    } else {
-        Write-Warning "npm not found — run 'npm install' in $FrontDir if needed."
-    }
+if (-not $env:DATABASE_URL) {
+    $env:DATABASE_URL = 'sqlite:///var/cvtheque.db'
 }
 
-# Set DATABASE_URL for migrations
-$env:DATABASE_URL = 'sqlite:///var/cvtheque.db'
+$initScript = Join-Path $BackDir 'init_sqlite.php'
+if (Test-Path $initScript) {
+    Write-GotT "Préparation de la base SQLite locale..."
+    Push-Location $BackDir
+    php init_sqlite.php
+    Pop-Location
+} else {
+    Write-GotTWarning "Back/init_sqlite.php introuvable, la base sera préparée par les migrations si possible."
+}
 
-Push-Location $BackDir
-Write-Output "Running Doctrine migrations..."
-& php bin/console doctrine:migrations:migrate --no-interaction
-Pop-Location
+$consolePath = Join-Path $BackDir 'bin\console'
+if (Test-Path $consolePath) {
+    Write-GotT "Application des migrations Doctrine..."
+    Push-Location $BackDir
+    try {
+        php bin/console doctrine:migrations:migrate --no-interaction
+    } catch {
+        Write-GotTWarning "Les migrations ont échoué. Vérifie Back/var et la configuration Doctrine."
+    }
+    Pop-Location
+} else {
+    Write-GotTWarning "Back/bin/console introuvable, migrations ignorées."
+}
 
-Write-Output "Starting servers..."
+$BackPort = Find-FreePort -StartPort $BackPort
+$FrontPort = Find-FreePort -StartPort $FrontPort
+$ApiUrl = "http://${HostName}:${BackPort}"
 
-# Start PHP built-in server
-$phpProc = Start-Process -FilePath php -ArgumentList '-S','127.0.0.1:8000','-t','public','public/index.php' -WorkingDirectory $BackDir -NoNewWindow -PassThru
+Write-GotT "Démarrage du backend Symfony sur $ApiUrl"
+$phpProc = Start-Process -FilePath php -ArgumentList @('-S', "${HostName}:${BackPort}", '-t', 'public', 'public/index.php') -WorkingDirectory $BackDir -NoNewWindow -PassThru
 
-# Start Vite dev server
-$env:VITE_API_URL = ${env:VITE_API_URL} -or 'http://127.0.0.1:8000'
-$npmProc = Start-Process -FilePath npm -ArgumentList 'run','dev','--','--host','127.0.0.1','--port','5173' -WorkingDirectory $FrontDir -NoNewWindow -PassThru
+Start-Sleep -Milliseconds 500
+if (-not (Get-Process -Id $phpProc.Id -ErrorAction SilentlyContinue)) {
+    Write-Host "[GotT] Le backend n'a pas démarré." -ForegroundColor Red
+    exit 1
+}
 
-Write-Output "Symfony: http://127.0.0.1:8000"
-Write-Output "Vite: http://127.0.0.1:5173"
+if (-not $env:VITE_API_URL) {
+    $env:VITE_API_URL = $ApiUrl
+}
+
+Write-GotT "Démarrage du frontend Vite sur http://${HostName}:${FrontPort}"
+$npmProc = Start-Process -FilePath npm -ArgumentList @('run', 'dev', '--', '--host', $HostName, '--port', "$FrontPort", '--strictPort') -WorkingDirectory $FrontDir -NoNewWindow -PassThru
+
+Start-Sleep -Milliseconds 500
+if (-not (Get-Process -Id $npmProc.Id -ErrorAction SilentlyContinue)) {
+    Write-Host "[GotT] Le frontend n'a pas démarré." -ForegroundColor Red
+    if ($phpProc -and (Get-Process -Id $phpProc.Id -ErrorAction SilentlyContinue)) {
+        Stop-Process -Id $phpProc.Id -Force -ErrorAction SilentlyContinue
+    }
+    exit 1
+}
+
+Write-Host ""
+Write-GotT "Projet prêt."
+Write-Host "  API Symfony : $ApiUrl"
+Write-Host "  Front Vite  : http://${HostName}:${FrontPort}"
+Write-Host "  Admin dev   : admin@cvtheque.local / admin123"
+Write-Host ""
+Write-Host "Ctrl+C pour arrêter les deux serveurs."
+Write-Host ""
 
 try {
     while ($true) {
@@ -73,9 +173,13 @@ try {
         if (-not (Get-Process -Id $npmProc.Id -ErrorAction SilentlyContinue)) { break }
     }
 } finally {
-    Write-Output "Stopping servers..."
-    if ($phpProc -and (Get-Process -Id $phpProc.Id -ErrorAction SilentlyContinue)) { Stop-Process -Id $phpProc.Id -Force -ErrorAction SilentlyContinue }
-    if ($npmProc -and (Get-Process -Id $npmProc.Id -ErrorAction SilentlyContinue)) { Stop-Process -Id $npmProc.Id -Force -ErrorAction SilentlyContinue }
+    Write-GotT "Arrêt des serveurs..."
+    if ($phpProc -and (Get-Process -Id $phpProc.Id -ErrorAction SilentlyContinue)) {
+        Stop-Process -Id $phpProc.Id -Force -ErrorAction SilentlyContinue
+    }
+    if ($npmProc -and (Get-Process -Id $npmProc.Id -ErrorAction SilentlyContinue)) {
+        Stop-Process -Id $npmProc.Id -Force -ErrorAction SilentlyContinue
+    }
 }
 
-exit 0
+exit 1

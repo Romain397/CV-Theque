@@ -1,101 +1,209 @@
 # GotT
 
-Plateforme de mise en relation pour étudiants, écoles et entreprises, avec profils liés, recherche par tags et fiches éditables.
+GotT est une plateforme de mise en relation entre étudiants, écoles et entreprises. Le projet permet de gérer des profils publics, des annuaires, des offres, des demandes d'association validées par les écoles/entreprises, et une expérience de profil proche d'un mini LinkedIn.
 
 ```mermaid
 flowchart LR
-  A[Front React + Vite] --> B[API Symfony]
-  B --> C[(SQLite local)]
-  A --> D[Profils étudiants]
-  A --> E[Écoles]
-  A --> F[Entreprises]
-  A --> G[Offres d'emploi]
-  E --> D
-  F --> D
-  F --> G
+  Front[React + Vite] --> API[API Symfony]
+  API --> DB[(SQLite local)]
+
+  Front --> Students[Profils étudiants]
+  Front --> Schools[Écoles]
+  Front --> Companies[Entreprises]
+  Front --> Jobs[Offres]
+
+  Students --> SchoolRequests[Demandes école]
+  Students --> CompanyRequests[Demandes entreprise]
+  Schools --> SchoolRequests
+  Companies --> CompanyRequests
+  Companies --> Jobs
 ```
 
-## Ce que fait le projet
+## Fonctionnalités
 
-- Annuaire des étudiants avec fiches détaillées et filtrage par compétence.
-- Pages écoles et entreprises avec recherche, présentation enrichie et listes associées.
-- Profil connecté éditable selon le rôle, avec tags partagés réutilisables dans toute l’application.
-- Offres d’emploi liées aux entreprises et filtrables par mots-clés.
-- Console admin locale pour valider les comptes et gérer les rôles.
+- Annuaire des talents avec recherche, tags, fiches étudiants et liens vers école/entreprise.
+- Pages publiques écoles et entreprises avec bio, spécialités, points forts, réseaux et multi-localisations.
+- Profils connectés éditables selon le rôle: étudiant, école, entreprise ou admin.
+- Workflow de validation: un étudiant demande à rejoindre une école ou une entreprise, puis l'organisation accepte ou refuse depuis sa page `Demandes`.
+- Offres d'emploi liées aux entreprises, avec filtres et affichage détaillé.
+- Dashboard admin pour valider les comptes, gérer les rôles et supprimer des utilisateurs.
+- Résumés et matching intelligents côté front via les composants dédiés.
+- Thème clair/sombre et interface Material UI.
+
+## Stack
+
+- Frontend: React, Vite, React Router, Material UI.
+- Backend: Symfony, PHP, SQLite, JWT.
+- Base locale: `Back/var/cvtheque.db`.
+- Scripts de démarrage: `start-dev.sh` et `start-dev.ps1`.
 
 ## Démarrage rapide
 
-Prérequis locaux:
+Prérequis:
 
-- `php` (>=8.1 recommandé)
-- `composer` (pour les dépendances PHP)
-- `node` & `npm` (ou `pnpm`/`yarn`) pour le frontend
-- `sqlite3` (facultatif pour inspection)
+- PHP 8.1 ou plus récent recommandé
+- Composer
+- Node.js et npm
+- SQLite, facultatif mais pratique pour inspecter la base
 
-1) Depuis la racine du projet, installez les dépendances si nécessaire:
+Installation:
 
 ```bash
-# PHP (Back)
-cd Back && composer install --no-interaction
+cd Back
+composer install --no-interaction
 
-# Frontend (Front)
-cd ../Front && npm install
+cd ../Front
+npm install
 
-# revenir à la racine
 cd ..
 ```
 
-2) Démarrer le projet complet (backend + frontend) :
+Démarrer le projet complet:
 
 ```bash
 ./start-dev.sh
 ```
 
-3) Ou démarrer séparément si vous préférez :
+Le script installe les dépendances manquantes, prépare la base SQLite, lance les migrations, puis démarre:
+
+- Front: http://127.0.0.1:5173
+- API: http://127.0.0.1:8000
+
+Si le port `5173` est déjà pris, Vite peut proposer un autre port.
+
+## Démarrage manuel
+
+Backend:
 
 ```bash
-# Backend (dev server PHP intégré)
 cd Back
-# Assure la variable d'environnement pour utiliser la DB locale
 export DATABASE_URL="sqlite:///var/cvtheque.db"
+php bin/console doctrine:migrations:migrate --no-interaction
 php -S 127.0.0.1:8000 -t public public/index.php
+```
 
-# Frontend (Vite)
-cd ../Front
+Frontend:
+
+```bash
+cd Front
 VITE_API_URL="http://127.0.0.1:8000" npm run dev -- --host 127.0.0.1 --port 5173
 ```
 
-4) Points d'accès:
+## Comptes utiles en dev
 
-- Front: http://127.0.0.1:5173 (ou le port Vite affiché)
-- API Symfony: http://127.0.0.1:8000
+Admin local:
 
-5) Compte admin local par défaut (dev only) :
+- Email: `admin@cvtheque.local`
+- Mot de passe: `admin123`
 
-- Email: admin@cvtheque.local
-- Mot de passe: admin123
+École Hexagone:
 
-## Architecture
+- Email: `ecole-hexagone-versailles@cvtheque.local`
+- Mot de passe: `hexagone123`
 
-- `Back/`: API Symfony, Doctrine, migrations et données relationnelles.
-- `Front/`: application React, pages publiques, profils liés et auth locale.
-- `start-dev.sh`: démarre Symfony et Vite avec SQLite local forcé.
+Les nouveaux comptes créés via l'inscription sont en attente tant qu'un admin ne les valide pas.
 
-## Données métier
+## Pages principales
 
-- Un étudiant appartient à une école.
-- Un étudiant peut être lié à une entreprise.
-- Une offre appartient obligatoirement à une entreprise.
-- Les compétences, spécialités et tags sont réutilisables d’un profil à l’autre.
+- `/`: annuaire des talents
+- `/schools`: annuaire des écoles
+- `/schools/:id`: profil public d'une école
+- `/school-requests`: demandes reçues par l'école connectée
+- `/companies`: annuaire des entreprises
+- `/companies/:id`: profil public d'une entreprise
+- `/company-requests`: demandes reçues par l'entreprise connectée
+- `/jobs`: offres d'emploi
+- `/profile`: profil du compte connecté
+- `/admin`: administration
+- `/login`: connexion et inscription
 
-## Notes
+## Workflow de validation
 
-- Le projet local force `DATABASE_URL=sqlite:///var/cvtheque.db` au démarrage.
-- Les pages école, entreprise et profil sont pensées pour être consultées et modifiées comme une vitrine de type LinkedIn.
+Un étudiant ne peut pas afficher librement une école ou une entreprise sur son profil public sans validation.
 
-## Workflow de validation (écoles / entreprises)
+1. L'étudiant choisit une école ou une entreprise depuis sa page profil.
+2. La demande est stockée dans son profil avec un statut `pending`.
+3. L'école ou l'entreprise connectée voit la demande dans sa page `Demandes`.
+4. En cas d'acceptation, le lien devient officiel et apparaît automatiquement sur le profil de l'étudiant.
+5. En cas de refus, la demande est retirée ou marquée comme rejetée selon le endpoint appelé.
 
-- Un étudiant peut "demander" l'association à une école ou une entreprise depuis son profil (champ "Demander une école / entreprise").
-- La demande est conservée dans `profile.pendingSchoolId` / `profile.pendingCompanyId` et l'état dans `pendingSchoolStatus` / `pendingCompanyStatus` (valeurs: `pending`, `approved`, `rejected`).
-- Les écoles et entreprises voient dans leur espace connecté la liste des étudiants en attente et peuvent approuver ou refuser chaque demande.
-- L'approbation met à jour `schoolId` / `companyId` pour l'étudiant et marque la demande comme `approved`.
+Champs utilisés côté profil:
+
+- École: `pendingSchoolId`, `pendingSchoolStatus`, puis `schoolId` après validation.
+- Entreprise: `pendingCompanyId`, `pendingCompanyStatus`, puis `companyId` après validation.
+
+## Profils écoles et entreprises
+
+Les écoles et entreprises sont des comptes à part entière. La page `/profile` édite donc le profil du compte connecté, sans choix manuel de profil public.
+
+Les profils peuvent gérer:
+
+- Nom de l'organisation
+- Bio ou accroche
+- Spécialités sous forme de tags
+- Plusieurs localisations
+- Réseaux ou site public selon les données disponibles
+- Points forts pour les écoles, limités à 4 affichés côté public
+
+Quand une information manque, l'interface affiche une valeur de repli comme `Non renseigné`.
+
+## Données et API
+
+L'API principale expose notamment:
+
+- `POST /login`
+- `POST /register`
+- `GET /users`
+- `PATCH /users/{id}`
+- `PATCH /users/{id}/pending-company`
+- `PATCH /users/{id}/pending-school`
+- endpoints étudiants, écoles, entreprises, jobs et IA selon les contrôleurs Symfony
+
+La source principale actuelle pour les comptes, profils et associations est la table `users`, avec des champs relationnels et un `profileJson` pour les données enrichies.
+
+## Commandes utiles
+
+Frontend:
+
+```bash
+cd Front
+npm run dev
+npm run build
+npm run lint
+```
+
+Backend:
+
+```bash
+cd Back
+php bin/console doctrine:migrations:migrate
+php bin/console debug:router
+```
+
+Inspecter la base:
+
+```bash
+sqlite3 Back/var/cvtheque.db
+```
+
+## Structure
+
+```text
+Back/
+  src/Controller/      API Symfony
+  src/Entity/          entités Doctrine historiques
+  migrations/          migrations SQLite
+  var/cvtheque.db      base locale
+
+Front/
+  src/pages/           pages React
+  src/components/      composants UI
+  src/services/        appels API
+  src/data/            profils enrichis et fallbacks front
+```
+
+## Notes de dev
+
+- Le nom visible du projet est `GotT`; certains noms techniques historiques comme `cvtheque.db` ou `cv_token` peuvent encore exister.
+- Les erreurs console de type extension navigateur peuvent apparaître selon le navigateur; les erreurs React ou API du projet sont celles à traiter en priorité.
+- Après une modification de navigation ou de route, rechargez le front si Vite ne prend pas le hot reload correctement.

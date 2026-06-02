@@ -299,7 +299,7 @@ export default function Admin() {
                     </Stack>
 
                     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
-                      <Chip label={statusLabel(candidate.approved)} size="small" sx={{ fontWeight: 800, bgcolor: candidate.approved ? '#e7f7ee' : '#fff4db', color: candidate.approved ? 'var(--success, #027a48)' : 'var(--warning, #8a5a00)' }} />
+                      <Chip label={statusLabel(candidate.approved)} size="small" sx={{ fontWeight: 800, bgcolor: candidate.approved ? 'var(--success-chip-bg)' : 'var(--warning-chip-bg)', color: candidate.approved ? 'var(--success)' : 'var(--warning)', border: '1px solid var(--border-color)' }} />
                       <Button size="small" variant="outlined" onClick={(event) => { event.stopPropagation(); handleApprove(candidate.id, !candidate.approved); }}>
                         {candidate.approved ? 'Désactiver' : 'Valider'}
                       </Button>

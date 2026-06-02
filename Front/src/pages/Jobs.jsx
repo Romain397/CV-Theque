@@ -12,6 +12,7 @@ import {
   DialogContent,
   DialogTitle,
   IconButton,
+  Link,
   Paper,
   Select,
   Stack,
@@ -27,11 +28,48 @@ import { useAuth } from '../auth';
 import TagChipsInput from '../components/TagChipsInput';
 import SmartMatchBox from '../components/SmartMatchBox';
 import * as jobsService from '../services/jobsService';
+import { useHideExtraActions } from '../uiSettings';
 
 const normalize = (value) => String(value || '').trim().toLowerCase();
+const isScrapedJob = (job) => {
+  const source = normalize(job?.source);
+  const externalUrl = normalize(job?.externalUrl);
+  const id = normalize(job?.id);
+
+  return Boolean(
+    externalUrl
+    || source.includes('hellowork')
+    || id.startsWith('hellowork-')
+  );
+};
+const CompanyLabel = ({ company, fallback = 'Entreprise non renseignée' }) => {
+  const name = company?.name || fallback;
+  const content = (
+    <>
+      {name}{company?.location ? ` - ${company.location}` : ''}
+    </>
+  );
+
+  if (!company?.id || String(company.id).startsWith('hellowork-')) {
+    return content;
+  }
+
+  return (
+    <Link
+      component={RouterLink}
+      to={`/companies/${company.id}`}
+      onClick={(event) => event.stopPropagation()}
+      underline="hover"
+      sx={{ color: 'var(--accent)', fontWeight: 900 }}
+    >
+      {content}
+    </Link>
+  );
+};
 
 export default function Jobs() {
   const { user } = useAuth();
+  const [hideExtraActions] = useHideExtraActions();
   const [jobs, setJobs] = useState([]);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -123,6 +161,10 @@ export default function Jobs() {
     const normalizedSearch = normalize(search);
 
     const filtered = jobs.filter((job) => {
+      if (hideExtraActions && isScrapedJob(job)) {
+        return false;
+      }
+
       const haystack = [
         job.title,
         job.description,
@@ -147,7 +189,13 @@ export default function Jobs() {
     }
 
     return filtered;
-  }, [jobs, search, sort, tag]);
+  }, [hideExtraActions, jobs, search, sort, tag]);
+
+  useEffect(() => {
+    if (hideExtraActions && isScrapedJob(selectedJob)) {
+      setSelectedJob(null);
+    }
+  }, [hideExtraActions, selectedJob]);
 
   const canEditJob = (job) => Boolean(
     !job.externalUrl && user && (
@@ -204,7 +252,7 @@ export default function Jobs() {
         <Paper elevation={0} sx={{ p: { xs: 2.5, md: 3 }, borderRadius: 4, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
           <Stack spacing={2}>
             <Stack direction="row" spacing={1.2} sx={{ alignItems: 'center' }}>
-              <Box sx={{ width: 44, height: 44, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: '#eef4fb', color: 'var(--accent-strong)' }}>
+              <Box sx={{ width: 44, height: 44, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'var(--accent-soft)', color: 'var(--text-primary)' }}>
                 <LockOutlinedIcon />
               </Box>
               <Box>
@@ -289,7 +337,7 @@ export default function Jobs() {
                   label={item}
                   onClick={() => setTag(item)}
                   clickable
-                  sx={{ bgcolor: '#eef4fb', fontWeight: 800 }}
+                  sx={{ bgcolor: 'var(--accent-soft)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontWeight: 800 }}
                 />
               ))}
             </Stack>
@@ -337,11 +385,11 @@ export default function Jobs() {
                     <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
                       <Typography sx={{ fontSize: 20, fontWeight: 950 }}>{job.title}</Typography>
                       {job.source && (
-                        <Chip label={job.source} size="small" sx={{ bgcolor: '#ecfdf3', color: 'var(--success, #027a48)', fontWeight: 900 }} />
+                        <Chip label={job.source} size="small" sx={{ bgcolor: 'var(--success-chip-bg)', color: 'var(--success)', border: '1px solid var(--border-color)', fontWeight: 900 }} />
                       )}
                     </Stack>
                     <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 0.5 }}>
-                      {job.company?.name || 'Entreprise non renseignée'}{job.company?.location ? ` - ${job.company.location}` : ''}
+                      <CompanyLabel company={job.company} />
                     </Typography>
                     <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 1.2 }}>
                       {job.description || 'Aucune description'}
@@ -356,7 +404,7 @@ export default function Jobs() {
                       <Chip key={item} label={item} size="small" sx={{ bgcolor: 'var(--muted-bg)', fontWeight: 800 }} />
                     ))}
                     {(job.company?.specialties || []).slice(0, 2).map((item) => (
-                      <Chip key={item} label={item} size="small" sx={{ bgcolor: '#eef4fb', fontWeight: 800 }} />
+                      <Chip key={item} label={item} size="small" sx={{ bgcolor: 'var(--accent-soft)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontWeight: 800 }} />
                     ))}
                   </Stack>
                 </Stack>
@@ -377,7 +425,7 @@ export default function Jobs() {
                           placeholder="React, API, Backend"
                         />
                         {saveMessage && (
-                          <Box sx={{ mt: 1.2, p: 1.2, borderRadius: 2, bgcolor: saveMessage.type === 'success' ? '#ecfdf3' : '#fff5f5', color: saveMessage.type === 'success' ? 'var(--success, #027a48)' : 'var(--error, #b42318)' }}>
+                          <Box sx={{ mt: 1.2, p: 1.2, borderRadius: 2, bgcolor: saveMessage.type === 'success' ? 'var(--success-chip-bg)' : 'var(--error-chip-bg)', color: saveMessage.type === 'success' ? 'var(--success)' : 'var(--error)' }}>
                             <Typography sx={{ fontWeight: 800 }}>{saveMessage.text}</Typography>
                           </Box>
                         )}
@@ -414,7 +462,7 @@ export default function Jobs() {
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', flexWrap: 'wrap' }}>
             <Typography sx={{ fontWeight: 950, fontSize: 22 }}>{selectedJob?.title || ''}</Typography>
             {selectedJob?.source && (
-              <Chip label={selectedJob.source} size="small" sx={{ bgcolor: '#ecfdf3', color: 'var(--success, #027a48)', fontWeight: 900 }} />
+              <Chip label={selectedJob.source} size="small" sx={{ bgcolor: 'var(--success-chip-bg)', color: 'var(--success)', border: '1px solid var(--border-color)', fontWeight: 900 }} />
             )}
           </Stack>
           <IconButton
@@ -441,7 +489,7 @@ export default function Jobs() {
             return (
               <Stack spacing={1.5}>
                 <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>
-                  {selectedJob.company?.name || details.company?.name || 'Entreprise non renseignée'}
+                  <CompanyLabel company={selectedJob.company} fallback={details.company?.name || 'Entreprise non renseignée'} />
                 </Typography>
 
                 <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap' }}>
@@ -449,7 +497,7 @@ export default function Jobs() {
                       <Chip key={item} label={item} size="small" sx={{ bgcolor: 'var(--muted-bg)', fontWeight: 800 }} />
                   ))}
                   {(selectedJob.company?.specialties || []).map((item) => (
-                    <Chip key={item} label={item} size="small" sx={{ bgcolor: '#eef4fb', fontWeight: 800 }} />
+                    <Chip key={item} label={item} size="small" sx={{ bgcolor: 'var(--accent-soft)', color: 'var(--text-primary)', border: '1px solid var(--border-color)', fontWeight: 800 }} />
                   ))}
                 </Stack>
 
@@ -532,7 +580,7 @@ export default function Jobs() {
           <Button onClick={closeJobDetails} variant="outlined" sx={{ textTransform: 'none', fontWeight: 900 }}>
             Fermer
           </Button>
-          {selectedJob?.externalUrl && (
+          {selectedJob?.externalUrl && !hideExtraActions && (
             <Button
               href={selectedJob.externalUrl}
               target="_blank"

@@ -263,7 +263,7 @@ export function EntityDirectory({
                             <Chip label={`+${locations.length - 2}`} size="small" sx={{ height: 20, bgcolor: 'var(--muted-bg)', fontSize: 10, fontWeight: 900 }} />
                           )}
                         </Stack>
-                        <Chip label="Profil détaillé" size="small" sx={{ height: 18, borderRadius: 99, bgcolor: '#ffbf18', color: 'var(--text-primary)', fontSize: 10, fontWeight: 900 }} />
+                        <Chip label="Profil détaillé" size="small" sx={{ height: 18, borderRadius: 99, bgcolor: '#ffbf18', color: '#102339', fontSize: 10, fontWeight: 900 }} />
                       </Stack>
                       <Typography sx={{ color: 'var(--text-primary)', fontWeight: 900, lineHeight: 1.1, fontSize: 18 }}>
                         {entity.name}

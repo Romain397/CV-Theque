@@ -557,8 +557,8 @@ export const StudentsList = () => {
                                   cursor: 'pointer',
                                   '&:hover': {
                                     transform: 'translateY(-1px)',
-                                    bgcolor: '#efe3cf',
-                                    borderColor: '#d9c39d',
+                                    bgcolor: 'var(--muted-bg-alt)',
+                                    borderColor: 'var(--muted-border)',
                                     boxShadow: '0 8px 18px rgba(16, 35, 57, 0.08)',
                                   },
                                 }

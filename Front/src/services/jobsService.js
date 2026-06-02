@@ -19,4 +19,26 @@ export const updateJob = async (id, jobData) => {
   return await res.json();
 };
 
-export default { getJobs, updateJob };
+export const createJob = async (jobData) => {
+  const res = await fetch(`${API_BASE_URL}/jobs`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(jobData),
+  });
+
+  if (!res.ok) throw new Error(`Erreur: ${res.status}`);
+  return await res.json();
+};
+
+export const deleteJob = async (id) => {
+  const res = await fetch(`${API_BASE_URL}/jobs/${id}`, {
+    method: 'DELETE',
+  });
+
+  if (!res.ok) throw new Error(`Erreur: ${res.status}`);
+  return await res.json();
+};
+
+export default { getJobs, updateJob, createJob, deleteJob };

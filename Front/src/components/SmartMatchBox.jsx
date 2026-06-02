@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import AutoAwesomeOutlinedIcon from '@mui/icons-material/AutoAwesomeOutlined';
 import * as aiService from '../services/aiService';
+import { useHideExtraActions } from '../uiSettings';
 
 const levelLabel = {
   excellent: 'Excellent',
@@ -16,6 +17,7 @@ export default function SmartMatchBox({
   title = 'Matching profil ↔ offre',
   description = 'Compare le profil sélectionné à cette offre et génère un score de compatibilité.',
 }) {
+  const [hideExtraActions] = useHideExtraActions();
   const [match, setMatch] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -39,6 +41,10 @@ export default function SmartMatchBox({
   const hasContent = Boolean(match);
   const score = typeof match?.score === 'number' ? match.score : null;
 
+  if (hideExtraActions && !hasContent) {
+    return null;
+  }
+
   return (
     <Box sx={{ mt: 2.5, p: 2.2, borderRadius: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'var(--surface-soft)' }}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }}>
@@ -51,16 +57,18 @@ export default function SmartMatchBox({
           </Typography>
         </Box>
 
-        <Button
-          type="button"
-          variant="contained"
-          onClick={handleGenerate}
-          disabled={loading || !job || !profile}
-          startIcon={<AutoAwesomeOutlinedIcon />}
-          sx={{ textTransform: 'none', fontWeight: 900 }}
-        >
-          {loading ? 'Analyse...' : !profile ? 'Profil étudiant requis' : hasContent ? 'Réanalyser' : 'Analyser le match'}
-        </Button>
+        {!hideExtraActions && (
+          <Button
+            type="button"
+            variant="contained"
+            onClick={handleGenerate}
+            disabled={loading || !job || !profile}
+            startIcon={<AutoAwesomeOutlinedIcon />}
+            sx={{ textTransform: 'none', fontWeight: 900 }}
+          >
+            {loading ? 'Analyse...' : !profile ? 'Profil étudiant requis' : hasContent ? 'Réanalyser' : 'Analyser le match'}
+          </Button>
+        )}
       </Stack>
 
       {!profile && (

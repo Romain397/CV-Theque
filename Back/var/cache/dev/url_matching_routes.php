@@ -15,7 +15,10 @@ return [
         '/users' => [[['_route' => 'users_list', '_controller' => 'App\\Controller\\AuthController::listUsers'], null, ['GET' => 0], null, false, false, null]],
         '/companies' => [[['_route' => 'companies_index', '_controller' => 'App\\Controller\\CompanyController::index'], null, ['GET' => 0], null, false, false, null]],
         '/' => [[['_route' => 'home', '_controller' => 'App\\Controller\\DefaultController::index'], null, ['GET' => 0], null, false, false, null]],
-        '/jobs' => [[['_route' => 'jobs_index', '_controller' => 'App\\Controller\\JobController::index'], null, ['GET' => 0], null, false, false, null]],
+        '/jobs' => [
+            [['_route' => 'jobs_index', '_controller' => 'App\\Controller\\JobController::index'], null, ['GET' => 0], null, false, false, null],
+            [['_route' => 'jobs_create', '_controller' => 'App\\Controller\\JobController::create'], null, ['POST' => 0], null, false, false, null],
+        ],
         '/schools' => [[['_route' => 'schools_index', '_controller' => 'App\\Controller\\SchoolController::index'], null, ['GET' => 0], null, false, false, null]],
         '/students' => [
             [['_route' => 'students_index', '_controller' => 'App\\Controller\\StudentController::index'], null, ['GET' => 0], null, false, false, null],
@@ -33,11 +36,13 @@ return [
                     .')'
                 .')'
                 .'|/companies/([^/]++)(*:129)'
-                .'|/jobs/([^/]++)(*:151)'
+                .'|/jobs/([^/]++)(?'
+                    .'|(*:154)'
+                .')'
                 .'|/s(?'
-                    .'|chools/([^/]++)(*:179)'
+                    .'|chools/([^/]++)(*:183)'
                     .'|tudents/([^/]++)(?'
-                        .'|(*:206)'
+                        .'|(*:210)'
                     .')'
                 .')'
             .')/?$}sDu',
@@ -53,9 +58,12 @@ return [
         86 => [[['_route' => 'user_pending_school', '_controller' => 'App\\Controller\\AuthController::handlePendingSchool'], ['id'], ['POST' => 0], null, false, false, null]],
         100 => [[['_route' => 'user_pending_company', '_controller' => 'App\\Controller\\AuthController::handlePendingCompany'], ['id'], ['POST' => 0], null, false, false, null]],
         129 => [[['_route' => 'companies_update', '_controller' => 'App\\Controller\\CompanyController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
-        151 => [[['_route' => 'jobs_update', '_controller' => 'App\\Controller\\JobController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
-        179 => [[['_route' => 'schools_update', '_controller' => 'App\\Controller\\SchoolController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
-        206 => [
+        154 => [
+            [['_route' => 'jobs_update', '_controller' => 'App\\Controller\\JobController::update'], ['id'], ['PUT' => 0], null, false, true, null],
+            [['_route' => 'jobs_delete', '_controller' => 'App\\Controller\\JobController::delete'], ['id'], ['DELETE' => 0], null, false, true, null],
+        ],
+        183 => [[['_route' => 'schools_update', '_controller' => 'App\\Controller\\SchoolController::update'], ['id'], ['PUT' => 0], null, false, true, null]],
+        210 => [
             [['_route' => 'students_update', '_controller' => 'App\\Controller\\StudentController::update'], ['id'], ['PUT' => 0], null, false, true, null],
             [['_route' => 'students_delete', '_controller' => 'App\\Controller\\StudentController::delete'], ['id'], ['DELETE' => 0], null, false, true, null],
             [null, null, null, null, false, false, 0],
