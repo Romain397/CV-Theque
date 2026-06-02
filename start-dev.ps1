@@ -41,6 +41,23 @@ function Require-Command {
     }
 }
 
+function Resolve-CommandPath {
+    param([string]$Name)
+
+    if ($IsWindows) {
+        $command = Get-Command "$Name.cmd" -ErrorAction SilentlyContinue
+        if ($command) { return $command.Source }
+
+        $command = Get-Command "$Name.exe" -ErrorAction SilentlyContinue
+        if ($command) { return $command.Source }
+    }
+
+    $command = Get-Command $Name -ErrorAction SilentlyContinue
+    if ($command) { return $command.Source }
+
+    return $null
+}
+
 function Test-PortInUse {
     param([int]$Port)
 
@@ -72,6 +89,19 @@ function Find-FreePort {
 
 Require-Command php "PHP est introuvable. Installe PHP avant de lancer le backend."
 Require-Command npm "npm est introuvable. Installe Node.js/npm avant de lancer le frontend."
+
+$phpExe = Resolve-CommandPath php
+$npmExe = Resolve-CommandPath npm
+
+if (-not $phpExe) {
+    Write-Host "[GotT] PHP est introuvable. Installe PHP avant de lancer le backend." -ForegroundColor Red
+    exit 1
+}
+
+if (-not $npmExe) {
+    Write-Host "[GotT] npm est introuvable. Installe Node.js/npm avant de lancer le frontend." -ForegroundColor Red
+    exit 1
+}
 
 if (-not (Test-Path $BackDir) -or -not (Test-Path $FrontDir)) {
     Write-Host "[GotT] Lance ce script depuis la racine du projet GotT." -ForegroundColor Red
@@ -133,7 +163,7 @@ $FrontPort = Find-FreePort -StartPort $FrontPort
 $ApiUrl = "http://${HostName}:${BackPort}"
 
 Write-GotT "Démarrage du backend Symfony sur $ApiUrl"
-$phpProc = Start-Process -FilePath php -ArgumentList @('-S', "${HostName}:${BackPort}", '-t', 'public', 'public/index.php') -WorkingDirectory $BackDir -NoNewWindow -PassThru
+$phpProc = Start-Process -FilePath $phpExe -ArgumentList @('-S', "${HostName}:${BackPort}", '-t', 'public', 'public/index.php') -WorkingDirectory $BackDir -NoNewWindow -PassThru
 
 Start-Sleep -Milliseconds 500
 if (-not (Get-Process -Id $phpProc.Id -ErrorAction SilentlyContinue)) {
@@ -146,7 +176,7 @@ if (-not $env:VITE_API_URL) {
 }
 
 Write-GotT "Démarrage du frontend Vite sur http://${HostName}:${FrontPort}"
-$npmProc = Start-Process -FilePath npm -ArgumentList @('run', 'dev', '--', '--host', $HostName, '--port', "$FrontPort", '--strictPort') -WorkingDirectory $FrontDir -NoNewWindow -PassThru
+$npmProc = Start-Process -FilePath $npmExe -ArgumentList @('run', 'dev', '--', '--host', $HostName, '--port', "$FrontPort", '--strictPort') -WorkingDirectory $FrontDir -NoNewWindow -PassThru
 
 Start-Sleep -Milliseconds 500
 if (-not (Get-Process -Id $npmProc.Id -ErrorAction SilentlyContinue)) {
