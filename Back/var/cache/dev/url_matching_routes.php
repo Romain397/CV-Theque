@@ -8,6 +8,8 @@
 return [
     false, // $matchHost
     [ // $staticRoutes
+        '/ai/profile-summary' => [[['_route' => 'ai_profile_summary', '_controller' => 'App\\Controller\\AiController::profileSummary'], null, ['POST' => 0], null, false, false, null]],
+        '/ai/job-match' => [[['_route' => 'ai_job_match', '_controller' => 'App\\Controller\\AiController::jobMatch'], null, ['POST' => 0], null, false, false, null]],
         '/login' => [[['_route' => 'api_login', '_controller' => 'App\\Controller\\AuthController::login'], null, ['POST' => 0], null, false, false, null]],
         '/register' => [[['_route' => 'api_register', '_controller' => 'App\\Controller\\AuthController::register'], null, ['POST' => 0], null, false, false, null]],
         '/users' => [[['_route' => 'users_list', '_controller' => 'App\\Controller\\AuthController::listUsers'], null, ['GET' => 0], null, false, false, null]],

@@ -37,7 +37,7 @@ export function TagChipsInput({
   return (
     <Box>
       {label && (
-        <Typography variant="body2" sx={{ fontWeight: 800, color: '#102339', mb: 0.8 }}>
+        <Typography variant="body2" sx={{ fontWeight: 800, color: 'var(--text-primary)', mb: 0.8 }}>
           {label}
         </Typography>
       )}
@@ -51,14 +51,14 @@ export function TagChipsInput({
             deleteIcon={<CloseRoundedIcon sx={{ fontSize: 14 }} />}
             sx={{
               borderRadius: 99,
-              bgcolor: '#eef4fb',
-              color: '#1f5f9d',
+              bgcolor: 'var(--accent-soft)',
+              color: 'var(--accent-strong)',
               fontWeight: 800,
-              border: '1px solid #d4e5f4',
+              border: '1px solid var(--border-color)',
               '& .MuiChip-deleteIcon': {
                 opacity: 0,
                 transition: 'opacity .15s ease',
-                color: '#1f5f9d',
+                color: 'var(--accent-strong)',
                 ml: 0.25,
               },
               '&:hover .MuiChip-deleteIcon': {

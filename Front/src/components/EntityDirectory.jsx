@@ -18,6 +18,10 @@ import SearchIcon from '@mui/icons-material/Search';
 import PublicIcon from '@mui/icons-material/Public';
 
 const getInitial = (name, fallback) => (name?.[0] || fallback || '?').toUpperCase();
+const getLocations = (entity) =>
+  (Array.isArray(entity.locations) && entity.locations.length ? entity.locations : [entity.location])
+    .map((location) => `${location || ''}`.trim())
+    .filter(Boolean);
 
 export function EntityDirectory({
   title,
@@ -41,6 +45,7 @@ export function EntityDirectory({
       const searchBase = [
         entity.name,
         entity.location,
+        ...(entity.locations || []),
         profile.tagline,
         profile.summary,
         ...(profile.specialties || []),
@@ -57,21 +62,21 @@ export function EntityDirectory({
     }
 
     if (sort === 'location') {
-      return [...filtered].sort((a, b) => (a.location || '').localeCompare(b.location || ''));
+      return [...filtered].sort((a, b) => ((a.locations || [a.location])[0] || '').localeCompare((b.locations || [b.location])[0] || ''));
     }
 
     return filtered;
   }, [entities, profileByEntity, search, sort]);
 
   return (
-    <Box sx={{ minHeight: '100vh', bgcolor: '#f7f8fa', py: 3 }}>
+    <Box sx={{ minHeight: '100vh', bgcolor: 'var(--page-bg)', py: 3 }}>
       <Box sx={{ maxWidth: 1240, mx: 'auto', px: { xs: 2, md: 3 } }}>
         <Paper
           elevation={0}
           sx={{
             overflow: 'hidden',
             borderRadius: 4,
-            bgcolor: '#1f5f9d',
+            bgcolor: 'var(--accent)',
             color: '#fff',
             boxShadow: '0 24px 60px rgba(17, 36, 59, 0.14)',
           }}
@@ -82,7 +87,7 @@ export function EntityDirectory({
               gridTemplateColumns: { xs: '1fr', md: '1.4fr 1fr' },
               gap: 3,
               p: { xs: 3, md: 4 },
-              background: 'linear-gradient(135deg, #1f5f9d 0%, #2b79c2 100%)',
+              background: 'linear-gradient(135deg, var(--accent) 0%, #2b79c2 100%)',
             }}
           >
             <Box>
@@ -102,7 +107,7 @@ export function EntityDirectory({
                   onClick={() => document.getElementById('directory-search')?.focus()}
                   sx={{
                     bgcolor: '#ffc21c',
-                    color: '#102339',
+                    color: 'var(--text-primary)',
                     borderRadius: 99,
                     px: 2.4,
                     fontWeight: 900,
@@ -133,35 +138,30 @@ export function EntityDirectory({
             <Stack spacing={1.2}>
               <Paper elevation={0} sx={{ p: 2.2, borderRadius: 2, bgcolor: 'rgba(255,255,255,.12)', color: '#fff' }}>
                 <Typography variant="overline" sx={{ color: '#ffc21c', fontWeight: 900, letterSpacing: 2 }}>
-                  Navigation rapide
+                  Annuaire
                 </Typography>
                 <Typography variant="body2" sx={{ color: 'rgba(255,255,255,.76)' }}>
                   Les fiches sont consultables, recherchables et reliées à une page profil détaillée.
                 </Typography>
               </Paper>
-              {visibleEntities.slice(0, 2).map((entity) => {
-                const profile = profileByEntity(entity);
-                return (
-                  <Paper key={entity.id} elevation={0} sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,.12)', color: '#fff' }}>
-                    <Typography sx={{ fontSize: 13, fontWeight: 900 }}>{entity.name}</Typography>
-                    <Typography variant="caption" sx={{ color: 'rgba(255,255,255,.7)' }}>
-                      {profile.tagline}
-                    </Typography>
-                  </Paper>
-                );
-              })}
+              <Paper elevation={0} sx={{ p: 2, borderRadius: 2, bgcolor: 'rgba(255,255,255,.12)', color: '#fff' }}>
+                <Typography sx={{ fontSize: 28, lineHeight: 1, fontWeight: 950 }}>{visibleEntities.length}</Typography>
+                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,.7)', fontWeight: 800 }}>
+                  profils disponibles
+                </Typography>
+              </Paper>
             </Stack>
           </Box>
         </Paper>
 
-        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid #e5ebf1' }}>
+        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' } }}>
             <Box>
-              <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
+              <Typography variant="overline" sx={{ color: 'var(--text-secondary)', letterSpacing: 2, fontWeight: 900 }}>
                 Recherche
               </Typography>
               <Typography sx={{ fontSize: 22, fontWeight: 900 }}>{visibleEntities.length} résultats</Typography>
-              <Typography variant="body2" sx={{ color: '#607287' }}>
+              <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>
                 Filtrez par nom, ville, spécialités ou accroche.
               </Typography>
             </Box>
@@ -187,8 +187,8 @@ export function EntityDirectory({
         </Paper>
 
         {error && (
-          <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid #f2c7c7', bgcolor: '#fff5f5' }}>
-            <Typography sx={{ fontWeight: 800, color: '#b42318' }}>{error}</Typography>
+          <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid', borderColor: 'error.light', bgcolor: 'rgba(180, 35, 24, 0.08)' }}>
+            <Typography sx={{ fontWeight: 800, color: 'var(--error, #b42318)' }}>{error}</Typography>
           </Paper>
         )}
 
@@ -199,11 +199,11 @@ export function EntityDirectory({
             ['Accès profil', 'Oui'],
             ['Réseaux', 'Inclus'],
           ].map(([label, value]) => (
-            <Paper key={label} elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: '#fff', border: '1px solid #edf1f5' }}>
-              <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
+            <Paper key={label} elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: 'background.paper', border: '1px solid', borderColor: 'divider' }}>
+              <Typography variant="overline" sx={{ color: 'var(--text-secondary)', letterSpacing: 2, fontWeight: 900 }}>
                 {label}
               </Typography>
-              <Typography sx={{ fontSize: 28, lineHeight: 1, fontWeight: 950, color: '#102339', mt: 0.5 }}>
+              <Typography sx={{ fontSize: 28, lineHeight: 1, fontWeight: 950, color: 'var(--text-primary)', mt: 0.5 }}>
                 {value}
               </Typography>
             </Paper>
@@ -211,7 +211,7 @@ export function EntityDirectory({
         </Box>
 
         {visibleEntities.length === 0 ? (
-          <Paper elevation={0} sx={{ p: 4, mt: 2, textAlign: 'center', border: '1px dashed #cbd5df' }}>
+          <Paper elevation={0} sx={{ p: 4, mt: 2, textAlign: 'center', border: '1px dashed var(--border-color)' }}>
             <Typography sx={{ fontWeight: 900 }}>{emptyLabel}</Typography>
           </Paper>
         ) : (
@@ -219,6 +219,7 @@ export function EntityDirectory({
             {visibleEntities.map((entity) => {
               const profile = profileByEntity(entity);
               const specialties = profile.specialties?.slice(0, 3) || [];
+              const locations = getLocations(entity);
 
               return (
                 <Paper
@@ -229,8 +230,9 @@ export function EntityDirectory({
                   sx={{
                     p: 2.4,
                     borderRadius: 3,
-                    border: '1px solid #e7edf4',
-                    bgcolor: '#fff',
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    bgcolor: 'background.paper',
                     textDecoration: 'none',
                     color: 'inherit',
                     boxShadow: '0 10px 28px rgba(17, 36, 59, 0.08)',
@@ -242,32 +244,43 @@ export function EntityDirectory({
                   }}
                 >
                   <Stack direction="row" spacing={1.6} sx={{ alignItems: 'flex-start' }}>
-                    <Avatar sx={{ width: 44, height: 44, bgcolor: '#dceaf7', color: '#214a71', fontWeight: 900 }}>
+                    <Avatar sx={{ width: 44, height: 44, bgcolor: 'var(--accent-soft)', color: 'var(--accent-strong)', fontWeight: 900 }}>
                       {getInitial(entity.name, emptyLabel[0] || 'A')}
                     </Avatar>
                     <Box sx={{ flex: 1, minWidth: 0 }}>
                       <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.6 }}>
-                        <Typography variant="caption" sx={{ color: '#45627d', fontWeight: 800 }}>
-                          {entity.location || 'Localisation non précisée'}
-                        </Typography>
-                        <Chip label="Profil détaillé" size="small" sx={{ height: 18, borderRadius: 99, bgcolor: '#ffbf18', color: '#102339', fontSize: 10, fontWeight: 900 }} />
+                        <Stack direction="row" gap={0.6} sx={{ alignItems: 'center', flexWrap: 'wrap', minWidth: 0 }}>
+                          {locations.length ? (
+                            locations.slice(0, 2).map((location) => (
+                              <Chip key={location} label={location} size="small" sx={{ height: 20, maxWidth: 220, bgcolor: 'var(--surface-soft)', fontSize: 10, fontWeight: 800 }} />
+                            ))
+                          ) : (
+                            <Typography variant="caption" sx={{ color: 'var(--text-secondary)', fontWeight: 800 }}>
+                              Localisation non précisée
+                            </Typography>
+                          )}
+                          {locations.length > 2 && (
+                            <Chip label={`+${locations.length - 2}`} size="small" sx={{ height: 20, bgcolor: 'var(--muted-bg)', fontSize: 10, fontWeight: 900 }} />
+                          )}
+                        </Stack>
+                        <Chip label="Profil détaillé" size="small" sx={{ height: 18, borderRadius: 99, bgcolor: '#ffbf18', color: 'var(--text-primary)', fontSize: 10, fontWeight: 900 }} />
                       </Stack>
-                      <Typography sx={{ color: '#0f263d', fontWeight: 900, lineHeight: 1.1, fontSize: 18 }}>
+                      <Typography sx={{ color: 'var(--text-primary)', fontWeight: 900, lineHeight: 1.1, fontSize: 18 }}>
                         {entity.name}
                       </Typography>
-                      <Typography variant="body2" sx={{ color: '#607287', mt: 0.4 }}>
+                      <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 0.4 }}>
                         {profile.tagline}
                       </Typography>
                     </Box>
                   </Stack>
 
-                  <Typography variant="body2" sx={{ color: '#596b7e', mt: 1.4, minHeight: 48 }}>
+                  <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 1.4, minHeight: 48 }}>
                     {profile.summary}
                   </Typography>
 
                   <Stack direction="row" gap={0.8} sx={{ flexWrap: 'wrap', mt: 1.6 }}>
                     {specialties.map((item) => (
-                      <Chip key={item} label={item} size="small" sx={{ borderRadius: 99, bgcolor: '#f5efe2', color: '#514832', fontSize: 11, fontWeight: 700, border: '1px solid #e9ddc8' }} />
+                      <Chip key={item} label={item} size="small" sx={{ borderRadius: 99, bgcolor: 'var(--muted-bg)', color: 'var(--text-primary)', fontSize: 11, fontWeight: 700, border: '1px solid var(--muted-border)' }} />
                     ))}
                   </Stack>
 
@@ -275,11 +288,11 @@ export function EntityDirectory({
                     <Button
                       size="small"
                       endIcon={<PublicIcon />}
-                      sx={{ px: 0, minWidth: 'auto', color: '#184b78', fontSize: 12, fontWeight: 900, textTransform: 'none' }}
+                      sx={{ px: 0, minWidth: 'auto', color: 'var(--accent)', fontSize: 12, fontWeight: 900, textTransform: 'none' }}
                     >
                       Voir le profil complet
                     </Button>
-                    <Typography variant="caption" sx={{ color: '#7a8794' }}>
+                    <Typography variant="caption" sx={{ color: 'var(--text-secondary)' }}>
                       Réseaux et détails inclus
                     </Typography>
                   </Stack>

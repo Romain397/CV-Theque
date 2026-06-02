@@ -24,7 +24,8 @@ export default function Login(){
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [role, setRole] = useState('student');
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
@@ -43,11 +44,14 @@ export default function Login(){
   async function handleRegister(e){
     e.preventDefault();
     try {
-      const result = await register({ name, email, password, role });
+      const name = `${firstName} ${lastName}`.trim();
+      const result = await register({ name, firstName, lastName, email, password, role });
       if (result?.pending) {
         setNotice('Compte créé. Il est en attente de validation par un administrateur avant activation.');
         setMode('login');
         setPassword('');
+        setFirstName('');
+        setLastName('');
         setRole('student');
       } else {
         navigate('/');
@@ -75,19 +79,20 @@ export default function Login(){
           mx: 'auto',
           overflow: 'hidden',
           borderRadius: 4,
-          border: '1px solid #e4eaf1',
+          border: '1px solid',
+          borderColor: 'divider',
           boxShadow: '0 24px 60px rgba(17, 36, 59, 0.12)',
-          bgcolor: '#fff',
+          bgcolor: 'background.paper',
         }}
       >
         <Box sx={{ p: 3, pb: 0 }}>
-          <Typography variant="overline" sx={{ color: '#6d7c8f', letterSpacing: 2, fontWeight: 900 }}>
+          <Typography variant="overline" sx={{ color: 'var(--text-secondary)', letterSpacing: 2, fontWeight: 900 }}>
             Espace étudiant
           </Typography>
           <Typography component="h1" sx={{ fontSize: 30, fontWeight: 950, lineHeight: 1.05, mt: 0.5 }}>
             Connexion ou création de compte
           </Typography>
-          <Typography sx={{ color: '#607287', mt: 1 }}>
+          <Typography sx={{ color: 'var(--text-secondary)', mt: 1 }}>
             Sélectionnez l’onglet correspondant pour vous connecter ou créer un compte étudiant.
           </Typography>
         </Box>
@@ -105,10 +110,10 @@ export default function Login(){
                 minHeight: 44,
                 textTransform: 'none',
                 fontWeight: 900,
-                color: '#6d7c8f',
+                color: 'var(--text-secondary)',
               },
               '& .Mui-selected': {
-                color: '#102339 !important',
+                color: 'var(--text-primary) !important',
               },
             }}
           >
@@ -125,7 +130,7 @@ export default function Login(){
           )}
 
           {notice && (
-            <Typography sx={{ mb: 2, color: '#1f5f9d', fontWeight: 700 }}>
+            <Typography sx={{ mb: 2, color: 'var(--accent)', fontWeight: 700 }}>
               {notice}
             </Typography>
           )}
@@ -149,7 +154,7 @@ export default function Login(){
               <Box sx={{ width: '50%', pr: { sm: 1.5 }, pt: 1 }}>
                 <Box component="form" onSubmit={handleLogin}>
                   <Stack spacing={2}>
-                    <Typography variant="overline" sx={{ color: '#6d7c8f', letterSpacing: 2, fontWeight: 900 }}>
+                    <Typography variant="overline" sx={{ color: 'var(--text-secondary)', letterSpacing: 2, fontWeight: 900 }}>
                       Connexion
                     </Typography>
                     <TextField
@@ -168,10 +173,10 @@ export default function Login(){
                     <Button type="submit" variant="contained" size="large" sx={{ textTransform: 'none', fontWeight: 900 }}>
                       Se connecter
                     </Button>
-                    <Typography variant="body2" sx={{ color: '#607287' }}>
+                    <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>
                       Utilisez vos identifiants existants pour accéder à votre espace.
                     </Typography>
-                    <Typography variant="caption" sx={{ color: '#7a8794' }}>
+                    <Typography variant="caption" sx={{ color: 'var(--text-secondary)' }}>
                       Démo admin: admin@cvtheque.local / admin123
                     </Typography>
                   </Stack>
@@ -181,15 +186,23 @@ export default function Login(){
               <Box sx={{ width: '50%', pl: { sm: 1.5 }, pt: 1 }}>
                 <Box component="form" onSubmit={handleRegister}>
                   <Stack spacing={2}>
-                    <Typography variant="overline" sx={{ color: '#6d7c8f', letterSpacing: 2, fontWeight: 900 }}>
+                    <Typography variant="overline" sx={{ color: 'var(--text-secondary)', letterSpacing: 2, fontWeight: 900 }}>
                       Inscription
                     </Typography>
-                    <TextField
-                      label="Nom complet"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      fullWidth
-                    />
+                    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2 }}>
+                      <TextField
+                        label="Prénom"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        fullWidth
+                      />
+                      <TextField
+                        label="Nom"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        fullWidth
+                      />
+                    </Box>
                     <TextField
                       label="Email"
                       value={email}
@@ -220,7 +233,7 @@ export default function Login(){
                     <Button type="submit" variant="contained" size="large" sx={{ textTransform: 'none', fontWeight: 900 }}>
                       Créer le compte
                     </Button>
-                    <Typography variant="body2" sx={{ color: '#607287' }}>
+                    <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>
                       Les comptes sont visibles par l'admin, puis activés avant de pouvoir accéder au site.
                     </Typography>
                   </Stack>

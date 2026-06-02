@@ -1,4 +1,4 @@
-# 🎓 CVthèque - Frontend React
+# GotT - Frontend React
 
 **Application de gestion d'étudiants avec API REST**
 

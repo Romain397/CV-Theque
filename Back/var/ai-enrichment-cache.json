@@ -1,0 +1,538 @@
+{
+    "schemaVersion": 3,
+    "fetchedAt": "2026-06-02T20:34:06+00:00",
+    "items": {
+        "2d2a7166eaf504ab96fef12b2839559a157e9305e834696e6f2ec8f3866fc16d": {
+            "canonicalTitle": "Alternance - Demenageur",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Demenageur"
+            ],
+            "keywords": [
+                "Demenageur",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 504,10 - 1 867,02 € / mois - 2 ans",
+            "warnings": []
+        },
+        "77f34a943734f30626987f43b5997f41deb90fd98dddf37f2d5425c56c933623": {
+            "canonicalTitle": "Commercial Junior en Alternance en Alternance",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Commercial",
+                "Junior"
+            ],
+            "keywords": [
+                "Commercial",
+                "Junior",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 1 801,80 € / mois - 12 mois",
+            "warnings": []
+        },
+        "6eee7a9797ac1003e89f0f9f927af84bd9619297331309d1ab79e2fe3a1f9bf8": {
+            "canonicalTitle": "Alternance - Demenageur",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Demenageur"
+            ],
+            "keywords": [
+                "Demenageur",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 492,22 - 1 823,03 € / mois",
+            "warnings": []
+        },
+        "967d8224ce94049915f663703475df75de0905c6da3d0afd3c149687b2f53602": {
+            "canonicalTitle": "Alternance - Assistant Recrutement en Alternance",
+            "normalizedTags": [
+                "Alternance",
+                "Industrie Agro-Alimentaire",
+                "Assistant",
+                "Recrutement",
+                "Industrie",
+                "Agro Alimentaire"
+            ],
+            "keywords": [
+                "Assistant",
+                "Recrutement",
+                "Industrie",
+                "Agro Alimentaire"
+            ],
+            "summary": "Alternance - 492,22 - 1 823,03 € / mois - 24 mois",
+            "warnings": []
+        },
+        "a21d7f138a783913a7585672df0afceb47eeb367076bf292bb4faf275916e6af": {
+            "canonicalTitle": "Vendeur en Alternance",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Vendeur"
+            ],
+            "keywords": [
+                "Vendeur",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 802,82 - 1 867,02 € / mois - 24 mois",
+            "warnings": []
+        },
+        "36536c3b29967bebe5a3e50bd49f24edf9cd630df4ac2fa7a4b6c74c4d133bc7": {
+            "canonicalTitle": "Backend Developer",
+            "normalizedTags": [
+                "Api",
+                "Node.js",
+                "Backend",
+                "Developer",
+                "Intégration."
+            ],
+            "keywords": [
+                "Backend",
+                "Api",
+                "Developer",
+                "Intégration.",
+                "Node.js"
+            ],
+            "summary": "API et intégration.",
+            "warnings": []
+        },
+        "65b08e9b70d548e606e1966f7132a98a2d9bcfea9e0e4575c5f658c2d67919ba": {
+            "canonicalTitle": "Frontend Developer",
+            "normalizedTags": [
+                "React",
+                "UI",
+                "Frontend",
+                "Developer",
+                "Conception",
+                "Développement",
+                "Interfaces",
+                "React."
+            ],
+            "keywords": [
+                "Frontend",
+                "Developer",
+                "Conception",
+                "Développement",
+                "Interfaces",
+                "React.",
+                "React"
+            ],
+            "summary": "Conception et développement d'interfaces React.",
+            "warnings": []
+        },
+        "profile:85a53248d74478ceaca66ea875cb668e64eeba26f89a651ac9e0bcc4e556dc01": {
+            "title": "Développeur frontend",
+            "summary": "Développeur frontend basé à Paris J aime construire des interfaces claires.",
+            "highlights": [
+                "Localisation: Paris",
+                "Compétences: React, UI"
+            ],
+            "keywords": [
+                "React",
+                "UI",
+                "Développeur",
+                "Frontend",
+                "Aime",
+                "Construire",
+                "Interfaces",
+                "Claires."
+            ]
+        },
+        "profile:71f483eeaee2735ea91e4eaed22e432c8ecfcb0b38957b0202ade7f737cf6d27": {
+            "title": "Theo Test - Développeur Frontend",
+            "summary": "Étudiant en développement web, spécialisé en front-end. Connaissances en React et UI pour créer des interfaces claires.",
+            "highlights": [
+                "Expérience en développement web",
+                "Compétences en React et UI",
+                "Connaissance de la création d'interfaces claires"
+            ],
+            "keywords": [
+                "Développeur frontend",
+                "React",
+                "UI",
+                "Interface utilisateur",
+                "Développement web"
+            ]
+        },
+        "profile:f4aecab728790e5a467bf8d586f6b16ab6ffc43936ad237da37c9f5788845017": {
+            "title": "Theo Test - Développeur Frontend",
+            "summary": "Développeur frontend avec expertise en React et Symfony. Conception d'interfaces web pour des applications modernes.",
+            "highlights": [
+                "Expérience en développement frontend",
+                "Maîtrise de React et Symfony",
+                "Conception d'une plateforme de mise en relation"
+            ],
+            "keywords": [
+                "Développeur frontend",
+                "React",
+                "Symfony",
+                "Interface web",
+                "Plateforme"
+            ]
+        },
+        "profile:a1dca8a553e1d957b76b13bb9ba7db5f23e5f7b48d9c70e3f0d51cd85602fb87": {
+            "title": "Jean Dupont - Dev Front",
+            "summary": "Étudiant en développement front-end basé à Lyon. Expérience en React.",
+            "highlights": [
+                "Développement web",
+                "Front-end",
+                "React"
+            ],
+            "keywords": [
+                "développement",
+                "front-end",
+                "React",
+                "étudiant",
+                "Lyon"
+            ]
+        },
+        "profile:2a8189229eeeb18c6395091f004d9e57488fab994ac4c67e656f65bac484acee": {
+            "title": "Profil étudiant",
+            "summary": "Profil étudiant orienté numérique à localisation non renseignée.",
+            "highlights": [],
+            "keywords": [
+                "Profil",
+                "Étudiant",
+                "Orienté",
+                "Numérique",
+                "Localisation",
+                "Non",
+                "Renseignée."
+            ]
+        },
+        "match:51870545f4a4be5b10402a8dedd5fc8639dd0ae748fcaac2aeebb147c2945ea8": {
+            "score": 55,
+            "level": "medium",
+            "explanation": "Localisation: Paris / Créhen - 22. Contrat: Alternance.",
+            "matchedSkills": [],
+            "missingSkills": [
+                "Recrutement",
+                "RH",
+                "Alternance",
+                "Industrie Agro-alimentaire",
+                "Assistant",
+                "Mission",
+                "Attractivité."
+            ],
+            "criteria": [
+                {
+                    "label": "Compétences communes",
+                    "score": 0,
+                    "note": "Peu de compétences communes détectées."
+                },
+                {
+                    "label": "Niveau d études",
+                    "score": 75,
+                    "note": "Attendu: Bac +3, Bac +4, Bac +5"
+                },
+                {
+                    "label": "Localisation",
+                    "score": 70,
+                    "note": "Offre à Créhen - 22, profil basé à Paris"
+                },
+                {
+                    "label": "Type de contrat",
+                    "score": 90,
+                    "note": "Contrat: Alternance"
+                },
+                {
+                    "label": "Tags proches",
+                    "score": 40,
+                    "note": "Tags de l offre: Recrutement, RH, Alternance"
+                }
+            ],
+            "warnings": []
+        },
+        "93d5104814ea1c645609c09f9dc121373fa78c8b8626b45cbfb1e69dec842826": {
+            "canonicalTitle": "Alternance - Demenageur",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Demenageur"
+            ],
+            "keywords": [
+                "Demenageur",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 492,22 - 1 823,03 € / mois",
+            "warnings": []
+        },
+        "match:71327795b3c8203b100b7761f7d7993c1745de245f90b7bb7a15020fc20906f6": {
+            "score": 49,
+            "level": "weak",
+            "explanation": "Localisation: non renseignée / Laon - 02. Contrat: Alternance.",
+            "matchedSkills": [],
+            "missingSkills": [
+                "Alternance",
+                "2 ans",
+                "Enseignement",
+                "504,10 - 1 867,02 € / mois",
+                "Demenageur"
+            ],
+            "criteria": [
+                {
+                    "label": "Compétences communes",
+                    "score": 0,
+                    "note": "Peu de compétences communes détectées."
+                },
+                {
+                    "label": "Niveau d études",
+                    "score": 45,
+                    "note": "Attendu: high school, professional certificate"
+                },
+                {
+                    "label": "Localisation",
+                    "score": 70,
+                    "note": "Localisation partiellement renseignée."
+                },
+                {
+                    "label": "Type de contrat",
+                    "score": 90,
+                    "note": "Contrat: Alternance"
+                },
+                {
+                    "label": "Tags proches",
+                    "score": 40,
+                    "note": "Tags de l offre: Alternance, 2 ans, Enseignement"
+                }
+            ],
+            "warnings": []
+        },
+        "profile:042a8423c52dc94baa8433c169f1018dd712b82ef6f4ae872d09e2b8f3a40299": {
+            "title": "Intégrateur Frontend",
+            "summary": "Malo Petit Intégrateur Frontend basé à Bordeaux J’aime transformer une maquette en interface nette, robuste et agréable à parcourir.",
+            "highlights": [
+                "Localisation: Bordeaux",
+                "Compétences: HTML, Tailwind, React"
+            ],
+            "keywords": [
+                "HTML",
+                "Tailwind",
+                "React",
+                "Intégrateur",
+                "Frontend",
+                "Aime",
+                "Transformer",
+                "Maquette"
+            ]
+        },
+        "0ecd9c41030f7ff5f0b783457e5891624fb1be3ef668c208fd8cb153ddd5b9ec": {
+            "canonicalTitle": "Vendeur en Alternance",
+            "normalizedTags": [
+                "Alternance",
+                "Distribution",
+                "Vendeur"
+            ],
+            "keywords": [
+                "Vendeur",
+                "Distribution"
+            ],
+            "summary": "Alternance - 802 - 1 867,02 € / mois - 24 mois",
+            "warnings": []
+        },
+        "profile:543ed75ef794a0e97b62bfffd0097e1ed3571cf7ca0c96858870390362a5617a": {
+            "title": "Développeur web",
+            "summary": "Clément Hubert Développeur web basé à Paris Jeune étudiant dynamique et sérieux, passionné de jeux vidéos",
+            "highlights": [
+                "Localisation: Paris",
+                "Compétences: HTML, CSS, React"
+            ],
+            "keywords": [
+                "HTML",
+                "CSS",
+                "React",
+                "Développeur",
+                "Web",
+                "Jeune",
+                "Étudiant",
+                "Dynamique"
+            ]
+        },
+        "profile:31c63257c4f973664f2f98400fff9ca9b56bc2b090a40ba1cba492d87f81d894": {
+            "title": "Développeur web",
+            "summary": "Clément Hubert Développeur web basé à Paris Jeune étudiant dynamique et sérieux, passionné de jeux vidéos",
+            "highlights": [
+                "Localisation: Paris",
+                "Compétences: HTML, CSS, React"
+            ],
+            "keywords": [
+                "HTML",
+                "CSS",
+                "React",
+                "Développeur",
+                "Web",
+                "Jeune",
+                "Étudiant",
+                "Dynamique"
+            ]
+        },
+        "profile:eed2e61b102062e0abd716a9ca256da00d13834bf0dd2e8f648863b3adb3cab2": {
+            "title": "Intégrateur Frontend",
+            "summary": "Malo Petit Intégrateur Frontend basé à Bordeaux J’aime transformer une maquette en interface nette, robuste et agréable à parcourir.",
+            "highlights": [
+                "Localisation: Bordeaux",
+                "Compétences: HTML, Tailwind, React"
+            ],
+            "keywords": [
+                "HTML",
+                "Tailwind",
+                "React",
+                "Intégrateur",
+                "Frontend",
+                "Aime",
+                "Transformer",
+                "Maquette"
+            ]
+        },
+        "bc3462826166d7c3ca608b3006f2391795c883537146efe76e1b37f5c8c1a615": {
+            "canonicalTitle": "Alternance - Affreteur",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Affreteur"
+            ],
+            "keywords": [
+                "Affreteur",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 504,10 € / mois - 12 mois",
+            "warnings": []
+        },
+        "57e93934f6e94fa9cb65555bf85b39b0b0ab9d04e0b75e8d246db0a0545a65ea": {
+            "canonicalTitle": "Alternance - Magasinier",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Magasinier"
+            ],
+            "keywords": [
+                "Magasinier",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 504,10 € / mois - 24 mois",
+            "warnings": []
+        },
+        "match:c1ce508ad6946175cfcd822489b894b655c12c8077b26ca288de074956862573": {
+            "score": 49,
+            "level": "weak",
+            "explanation": "Localisation: Paris / Nîmes - 30. Contrat: Alternance.",
+            "matchedSkills": [],
+            "missingSkills": [
+                "Alternance",
+                "12 mois",
+                "Enseignement",
+                "504,10 € / mois",
+                "Affreteur"
+            ],
+            "criteria": [
+                {
+                    "label": "Compétences communes",
+                    "score": 0,
+                    "note": "Peu de compétences communes détectées."
+                },
+                {
+                    "label": "Niveau d études",
+                    "score": 45,
+                    "note": "Attendu: high school, associate degree"
+                },
+                {
+                    "label": "Localisation",
+                    "score": 70,
+                    "note": "Offre à Nîmes - 30, profil basé à Paris"
+                },
+                {
+                    "label": "Type de contrat",
+                    "score": 90,
+                    "note": "Contrat: Alternance"
+                },
+                {
+                    "label": "Tags proches",
+                    "score": 40,
+                    "note": "Tags de l offre: Alternance, 12 mois, Enseignement"
+                }
+            ],
+            "warnings": []
+        },
+        "profile:063cd3d33ba5842befdf9739757367a5934ae471abf4d538d3f93ec2c12f15ee": {
+            "title": "Développeur web",
+            "summary": "Clément Hubert Développeur web basé à Paris Jeune étudiant dynamique et sérieux, passionné de jeux vidéos",
+            "highlights": [
+                "Localisation: Paris",
+                "Compétences: HTML, CSS, React",
+                "Acme Corp"
+            ],
+            "keywords": [
+                "HTML",
+                "CSS",
+                "React",
+                "Développeur",
+                "Web",
+                "Jeune",
+                "Étudiant",
+                "Dynamique"
+            ]
+        },
+        "profile:01015ee1fb1a997527083e9741fa95730ac1b3c8c4bc82c116a3c40247dae58f": {
+            "title": "École Hexagone - Campus Versailles",
+            "summary": "École Hexagone - Campus Versailles située à 12 parvis du Colonel Arnaud Beltrame, 78000 Versailles Cette école est présente dans la base, avec un profil enrichi côté front.",
+            "highlights": [
+                "Campus: 12 parvis du Colonel Arnaud Beltrame, 78000 Versailles",
+                "Spécialités: Informatique, Développement web et mobile, Intelligence Artificielle, Data Engineering",
+                "Informations complémentaires à enrichir"
+            ],
+            "keywords": [
+                "Informatique",
+                "Développement web et mobile",
+                "Intelligence Artificielle",
+                "Data Engineering",
+                "Cybersécurité",
+                "Cyberdéfense",
+                "Cloud",
+                "Systèmes d’information"
+            ]
+        },
+        "profile:27d1921c09c71c5299f6e6aaecab087804338bae59d831d208211a91bc1af846": {
+            "title": "École Hexagone",
+            "summary": "École Hexagone située à 12 parvis du Colonel Arnaud Beltrame, 78000 Versailles, 34-36 avenue de Cournon, 63170 Aubière École supérieure d’informatique à Versailles, au cœur de l’écosystème Paris-Saclay.",
+            "highlights": [
+                "Campus: 12 parvis du Colonel Arnaud Beltrame, 78000 Versailles, 34-36 avenue de Cournon, 63170 Aubière",
+                "Spécialités: Informatique, Développement web et mobile, Intelligence Artificielle, Data Engineering",
+                "Campus situé au 12 parvis du Colonel Arnaud Beltrame à Versailles",
+                "Proximité immédiate de Versailles-Chantiers",
+                "Cursus informatique, Data & IA et cyberdéfense"
+            ],
+            "keywords": [
+                "Informatique",
+                "Développement web et mobile",
+                "Intelligence Artificielle",
+                "Data Engineering",
+                "Cybersécurité",
+                "Cyberdéfense",
+                "Cloud",
+                "Systèmes d’information"
+            ]
+        },
+        "profile:a7cdce70d441cfe61092b9558e36452eb34fc413a100616106712fe68c03e293": {
+            "title": "Développeur web",
+            "summary": "Clément Hubert Développeur web basé à Paris Jeune étudiant dynamique et sérieux, passionné de jeux vidéos",
+            "highlights": [
+                "Localisation: Paris",
+                "Compétences: HTML, CSS, React",
+                "École Hexagone",
+                "Acme Corp"
+            ],
+            "keywords": [
+                "HTML",
+                "CSS",
+                "React",
+                "Développeur",
+                "Web",
+                "Jeune",
+                "Étudiant",
+                "Dynamique"
+            ]
+        }
+    }
+}

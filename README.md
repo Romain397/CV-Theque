@@ -1,4 +1,4 @@
-# CV-Theque
+# GotT
 
 Plateforme de mise en relation pour étudiants, écoles et entreprises, avec profils liés, recherche par tags et fiches éditables.
 

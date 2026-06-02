@@ -182,17 +182,19 @@ export default function Admin() {
         sx={{
           p: { xs: 2.5, md: 3 },
           borderRadius: 4,
-          border: '1px solid #e4eaf1',
+          border: '1px solid',
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
           boxShadow: '0 24px 60px rgba(17, 36, 59, 0.1)',
         }}
       >
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', md: 'center' } }}>
           <Box>
-            <Chip label="Console admin" sx={{ mb: 1, fontWeight: 900 }} />
+            <Chip label="Console admin" sx={{ mb: 1, fontWeight: 900, bgcolor: 'var(--accent-soft)' }} />
             <Typography variant="h4" sx={{ fontWeight: 950 }}>
               Administration globale
             </Typography>
-            <Typography variant="body2" sx={{ color: '#607287', maxWidth: 760, mt: 0.8 }}>
+            <Typography variant="body2" sx={{ color: 'var(--text-secondary)', maxWidth: 760, mt: 0.8 }}>
               Validez les nouveaux comptes, ajustez les rôles, consultez les profils et gardez une vision claire des utilisateurs de la plateforme.
             </Typography>
           </Box>
@@ -214,21 +216,21 @@ export default function Admin() {
             ['Étudiants', stats.students],
             ['Écoles / Entreprises', `${stats.schools} / ${stats.companies}`],
           ].map(([label, value]) => (
-            <Paper key={label} elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: '#f7f8fa', border: '1px solid #edf1f5' }}>
-              <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
+            <Paper key={label} elevation={0} sx={{ p: 2, borderRadius: 3, bgcolor: 'var(--surface-soft)', border: '1px solid var(--border-color)' }}>
+              <Typography variant="overline" sx={{ color: 'var(--text-secondary)', letterSpacing: 2, fontWeight: 900 }}>
                 {label}
               </Typography>
-              <Typography sx={{ fontSize: 28, lineHeight: 1, fontWeight: 950, color: '#102339', mt: 0.5 }}>
+              <Typography sx={{ fontSize: 28, lineHeight: 1, fontWeight: 950, color: 'var(--text-primary)', mt: 0.5 }}>
                 {value}
               </Typography>
             </Paper>
           ))}
         </Box>
 
-        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid #e5ebf1' }}>
+        <Paper elevation={0} sx={{ p: 2, borderRadius: 3, mt: 2, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper' }}>
           <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} sx={{ justifyContent: 'space-between', alignItems: { xs: 'stretch', md: 'center' } }}>
             <Box>
-              <Typography variant="overline" sx={{ color: '#7b8794', letterSpacing: 2, fontWeight: 900 }}>
+              <Typography variant="overline" sx={{ color: 'var(--text-secondary)', letterSpacing: 2, fontWeight: 900 }}>
                 Recherche et tri
               </Typography>
               <Typography sx={{ fontSize: 20, fontWeight: 900 }}>{filteredUsers.length} comptes visibles</Typography>
@@ -278,7 +280,7 @@ export default function Admin() {
                     p: 2.2,
                     mb: 1.4,
                     borderRadius: 3,
-                    border: selectedUser?.id === candidate.id ? '1px solid #1f5f9d' : '1px solid #e7edf4',
+                    border: selectedUser?.id === candidate.id ? '1px solid var(--accent)' : '1px solid var(--border-color)',
                     boxShadow: selectedUser?.id === candidate.id ? '0 14px 34px rgba(29, 78, 124, 0.12)' : '0 10px 28px rgba(17, 36, 59, 0.06)',
                     cursor: 'pointer',
                   }}
@@ -286,18 +288,18 @@ export default function Admin() {
                 >
                   <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ justifyContent: 'space-between', alignItems: { xs: 'flex-start', sm: 'center' } }}>
                     <Stack direction="row" spacing={1.6} sx={{ alignItems: 'center' }}>
-                      <Avatar sx={{ bgcolor: '#dceaf7', color: '#214a71', fontWeight: 900 }}>
+                      <Avatar sx={{ bgcolor: 'var(--accent-soft)', color: 'var(--accent-strong)', fontWeight: 900 }}>
                         {(candidate.name?.[0] || candidate.email?.[0] || '?').toUpperCase()}
                       </Avatar>
                       <Box>
                         <Typography sx={{ fontWeight: 900 }}>{candidate.name}</Typography>
-                        <Typography variant="body2" sx={{ color: '#607287' }}>{candidate.email}</Typography>
-                        <Typography variant="caption" sx={{ color: '#7a8794' }}>{roleLabel(candidate.role)}</Typography>
+                        <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>{candidate.email}</Typography>
+                        <Typography variant="caption" sx={{ color: 'var(--text-secondary)' }}>{roleLabel(candidate.role)}</Typography>
                       </Box>
                     </Stack>
 
                     <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', alignItems: 'center' }}>
-                      <Chip label={statusLabel(candidate.approved)} size="small" sx={{ fontWeight: 800, bgcolor: candidate.approved ? '#e7f7ee' : '#fff4db', color: candidate.approved ? '#0f7a3f' : '#9a6700' }} />
+                      <Chip label={statusLabel(candidate.approved)} size="small" sx={{ fontWeight: 800, bgcolor: candidate.approved ? '#e7f7ee' : '#fff4db', color: candidate.approved ? 'var(--success, #027a48)' : 'var(--warning, #8a5a00)' }} />
                       <Button size="small" variant="outlined" onClick={(event) => { event.stopPropagation(); handleApprove(candidate.id, !candidate.approved); }}>
                         {candidate.approved ? 'Désactiver' : 'Valider'}
                       </Button>
@@ -321,7 +323,7 @@ export default function Admin() {
                 </Paper>
               ))
             ) : (
-              <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: '1px dashed #cbd5df' }}>
+              <Paper elevation={0} sx={{ p: 4, textAlign: 'center', border: '1px dashed var(--border-color)' }}>
                 <Typography sx={{ fontWeight: 900 }}>Aucun compte ne correspond aux filtres.</Typography>
               </Paper>
             )}
@@ -346,19 +348,19 @@ export default function Admin() {
             </Box>
           </Box>
 
-          <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: '1px solid #e5ebf1', height: 'fit-content', position: { lg: 'sticky' }, top: 20 }}>
-            <Typography variant="overline" sx={{ letterSpacing: 2, color: '#7b8794', fontWeight: 900 }}>
+          <Paper elevation={0} sx={{ p: 2.5, borderRadius: 3, border: '1px solid', borderColor: 'divider', bgcolor: 'background.paper', height: 'fit-content', position: { lg: 'sticky' }, top: 20 }}>
+            <Typography variant="overline" sx={{ letterSpacing: 2, color: 'var(--text-secondary)', fontWeight: 900 }}>
               Détails du compte
             </Typography>
             {selectedUser ? (
               <Box sx={{ mt: 1.5 }}>
                 <Stack direction="row" spacing={1.5} sx={{ alignItems: 'center' }}>
-                  <Avatar sx={{ bgcolor: '#dceaf7', color: '#214a71', fontWeight: 900 }}>
+                  <Avatar sx={{ bgcolor: 'var(--accent-soft)', color: 'var(--accent-strong)', fontWeight: 900 }}>
                     {(selectedUser.name?.[0] || selectedUser.email?.[0] || '?').toUpperCase()}
                   </Avatar>
                   <Box>
                     <Typography sx={{ fontWeight: 950 }}>{selectedUser.name}</Typography>
-                    <Typography variant="body2" sx={{ color: '#607287' }}>{selectedUser.email}</Typography>
+                    <Typography variant="body2" sx={{ color: 'var(--text-secondary)' }}>{selectedUser.email}</Typography>
                   </Box>
                 </Stack>
 
@@ -369,14 +371,14 @@ export default function Admin() {
                     ['Créé', selectedUser.approvedAt ? new Date(selectedUser.approvedAt).toLocaleString('fr-FR') : '—'],
                     ['Validé par', selectedUser.approvedBy || '—'],
                   ].map(([label, value]) => (
-                    <Paper key={label} elevation={0} sx={{ p: 1.4, borderRadius: 2, bgcolor: '#f7f8fa', border: '1px solid #edf1f5' }}>
-                      <Typography variant="overline" sx={{ color: '#7b8794', fontWeight: 900, letterSpacing: 1.2 }}>{label}</Typography>
-                      <Typography sx={{ fontWeight: 800, color: '#102339', wordBreak: 'break-word' }}>{value}</Typography>
+                    <Paper key={label} elevation={0} sx={{ p: 1.4, borderRadius: 2, bgcolor: 'var(--surface-soft)', border: '1px solid var(--border-color)' }}>
+                      <Typography variant="overline" sx={{ color: 'var(--text-secondary)', fontWeight: 900, letterSpacing: 1.2 }}>{label}</Typography>
+                      <Typography sx={{ fontWeight: 800, color: 'var(--text-primary)', wordBreak: 'break-word' }}>{value}</Typography>
                     </Paper>
                   ))}
                 </Box>
 
-                <Typography variant="body2" sx={{ color: '#607287', mt: 2 }}>
+                <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 2 }}>
                   Cette vue peut servir de base pour gérer plus tard les écoles, les entreprises et les étudiants avec les mêmes mécaniques d’approbation et de modification.
                 </Typography>
                 {selectedUser?.profile?.pendingSchoolId && (
@@ -429,7 +431,7 @@ export default function Admin() {
                 )}
               </Box>
             ) : (
-              <Typography sx={{ color: '#607287', mt: 1.5 }}>Sélectionne un compte pour voir son détail.</Typography>
+              <Typography sx={{ color: 'var(--text-secondary)', mt: 1.5 }}>Sélectionne un compte pour voir son détail.</Typography>
             )}
           </Paper>
         </Box>

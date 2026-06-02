@@ -264,4 +264,4 @@ Consultez les documentations :
 
 ---
 
-**Développé pour le TP3 - CVthèque - 2FRNT Développement Frontend Avancé**
+**Développé pour le TP3 - GotT - 2FRNT Développement Frontend Avancé**

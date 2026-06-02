@@ -210,6 +210,14 @@
       <tag name="controller.service_arguments"/>
       <tag name="routing.route_loader"/>
     </service>
+    <service id="App\Controller\AiController" class="App\Controller\AiController" public="true" autowire="true" autoconfigure="true">
+      <tag name="controller.service_arguments"/>
+      <tag name="routing.controller"/>
+      <tag name="container.service_subscriber"/>
+      <call method="setContainer">
+        <argument type="service" id=".service_locator.TJNRSaV.App\Controller\AiController"/>
+      </call>
+    </service>
     <service id="App\Controller\AuthController" class="App\Controller\AuthController" public="true" autowire="true" autoconfigure="true">
       <tag name="controller.service_arguments"/>
       <tag name="routing.controller"/>
@@ -289,6 +297,12 @@
     <service id="App\Repository\StudentRepository" class="App\Repository\StudentRepository" autowire="true" autoconfigure="true">
       <tag name="doctrine.repository_service"/>
       <argument type="service" id="doctrine"/>
+    </service>
+    <service id="App\Service\AiEnrichmentService" class="App\Service\AiEnrichmentService" autowire="true" autoconfigure="true">
+      <argument>/Users/theo/Desktop/Cours/Hexagone/Year 2/2FRNT - Développement frontend avancé/TPs/CV-Theque/Back</argument>
+    </service>
+    <service id="App\Service\HelloworkOfferScraper" class="App\Service\HelloworkOfferScraper" autowire="true" autoconfigure="true">
+      <argument>/Users/theo/Desktop/Cours/Hexagone/Year 2/2FRNT - Développement frontend avancé/TPs/CV-Theque/Back</argument>
     </service>
     <service id="parameter_bag" class="Symfony\Component\DependencyInjection\ParameterBag\ContainerBag">
       <argument type="service" id="service_container"/>
@@ -466,7 +480,7 @@
     </service>
     <service id="argument_resolver.service" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver">
       <tag name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\ServiceValueResolver" priority="-50">controller.argument_value_resolver</tag>
-      <argument type="service" id=".service_locator.jGZ.SKn"/>
+      <argument type="service" id=".service_locator.49tHxsq"/>
     </service>
     <service id="argument_resolver.default" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver">
       <tag name="Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver" priority="-100">controller.argument_value_resolver</tag>
@@ -1635,7 +1649,7 @@
     </service>
     <service id="argument_resolver.not_tagged_controller" class="Symfony\Component\HttpKernel\Controller\ArgumentResolver\NotTaggedControllerValueResolver">
       <tag name="controller.argument_value_resolver" priority="-200"/>
-      <argument type="service" id=".service_locator.jGZ.SKn"/>
+      <argument type="service" id=".service_locator.49tHxsq"/>
     </service>
     <service id="debug.console.argument_resolver" class="Symfony\Component\Console\ArgumentResolver\TraceableArgumentResolver">
       <tag name="container.decorator" id="console.argument_resolver" inner="debug.console.argument_resolver.inner"/>
@@ -1706,6 +1720,7 @@
     <service id="routing.loader.attribute.services" class="Symfony\Component\Routing\Loader\AttributeServicesLoader">
       <tag name="routing.loader" priority="-10"/>
       <argument type="collection">
+        <argument>App\Controller\AiController</argument>
         <argument>App\Controller\AuthController</argument>
         <argument>App\Controller\CompanyController</argument>
         <argument>App\Controller\DefaultController</argument>
@@ -3505,6 +3520,10 @@
       <tag name="kernel.event_listener" event="kernel.response" method="onResponse" priority="-15"/>
       <tag name="container.hot_path"/>
     </service>
+    <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AiController" class="App\Controller\AiController" autowire="true" abstract="true"/>
+    <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AiController" class="App\Controller\AiController" autowire="true" abstract="true"/>
+    <service id=".instanceof.App\Controller\AiController.0.App\Controller\AiController" class="App\Controller\AiController" autowire="true" abstract="true"/>
+    <service id=".abstract.instanceof.App\Controller\AiController" class="App\Controller\AiController" autowire="true" autoconfigure="true" abstract="true"/>
     <service id=".instanceof.Symfony\Contracts\Service\ServiceSubscriberInterface.0.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" abstract="true"/>
     <service id=".instanceof.Symfony\Bundle\FrameworkBundle\Controller\AbstractController.0.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" abstract="true"/>
     <service id=".instanceof.App\Controller\AuthController.0.App\Controller\AuthController" class="App\Controller\AuthController" autowire="true" abstract="true"/>
@@ -4021,6 +4040,24 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.1vYpZ1B" method="withContext"/>
     </service>
+    <service id=".service_locator.EPFmjIE" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="aiEnrichmentService" type="service_closure" id="App\Service\AiEnrichmentService"/>
+      </argument>
+    </service>
+    <service id=".service_locator.EPFmjIE.App\Controller\AiController::profileSummary()" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\AiController::profileSummary()"/>
+      <argument>App\Controller\AiController::profileSummary()</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.EPFmjIE" method="withContext"/>
+    </service>
+    <service id=".service_locator.EPFmjIE.App\Controller\AiController::jobMatch()" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\AiController::jobMatch()"/>
+      <argument>App\Controller\AiController::jobMatch()</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.EPFmjIE" method="withContext"/>
+    </service>
     <service id=".service_locator.z0A7H.F" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
@@ -4046,24 +4083,33 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.hSlFnVO" method="withContext"/>
     </service>
-    <service id=".service_locator.z0A7H.F.App\Controller\JobController::index()" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.ELayUxZ" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator"/>
+      <argument type="collection">
+        <argument key="em" type="service_closure" id="doctrine.orm.default_entity_manager"/>
+        <argument key="helloworkOfferScraper" type="service_closure" id="App\Service\HelloworkOfferScraper"/>
+        <argument key="aiEnrichmentService" type="service_closure" id="App\Service\AiEnrichmentService"/>
+      </argument>
+    </service>
+    <service id=".service_locator.ELayUxZ.App\Controller\JobController::index()" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\JobController::index()"/>
       <argument>App\Controller\JobController::index()</argument>
       <argument type="service" id="service_container"/>
-      <factory service=".service_locator.z0A7H.F" method="withContext"/>
+      <factory service=".service_locator.ELayUxZ" method="withContext"/>
     </service>
-    <service id=".service_locator.y.LjztN" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.wS0Bpip" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
-        <argument key="job" type="service_closure" id=".errored..service_locator.y.LjztN.App\Entity\JobOffer"/>
+        <argument key="job" type="service_closure" id=".errored..service_locator.wS0Bpip.App\Entity\JobOffer"/>
         <argument key="em" type="service_closure" id="doctrine.orm.default_entity_manager"/>
+        <argument key="aiEnrichmentService" type="service_closure" id="App\Service\AiEnrichmentService"/>
       </argument>
     </service>
-    <service id=".service_locator.y.LjztN.App\Controller\JobController::update()" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.wS0Bpip.App\Controller\JobController::update()" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\JobController::update()"/>
       <argument>App\Controller\JobController::update()</argument>
       <argument type="service" id="service_container"/>
-      <factory service=".service_locator.y.LjztN" method="withContext"/>
+      <factory service=".service_locator.wS0Bpip" method="withContext"/>
     </service>
     <service id=".service_locator.z0A7H.F.App\Controller\SchoolController::index()" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\SchoolController::index()"/>
@@ -4121,17 +4167,19 @@
       <argument type="service" id="service_container"/>
       <factory service=".service_locator.0dP2eJy" method="withContext"/>
     </service>
-    <service id=".service_locator.jGZ.SKn" class="Symfony\Component\DependencyInjection\ServiceLocator">
+    <service id=".service_locator.49tHxsq" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator"/>
       <argument type="collection">
         <argument key="kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.1vYpZ1B.kernel::registerContainerConfiguration()"/>
         <argument key="App\Kernel::registerContainerConfiguration" type="service_closure" id=".service_locator.1vYpZ1B.kernel::registerContainerConfiguration()"/>
         <argument key="kernel::loadRoutes" type="service_closure" id=".service_locator.1vYpZ1B.kernel::loadRoutes()"/>
         <argument key="App\Kernel::loadRoutes" type="service_closure" id=".service_locator.1vYpZ1B.kernel::loadRoutes()"/>
+        <argument key="App\Controller\AiController::profileSummary" type="service_closure" id=".service_locator.EPFmjIE.App\Controller\AiController::profileSummary()"/>
+        <argument key="App\Controller\AiController::jobMatch" type="service_closure" id=".service_locator.EPFmjIE.App\Controller\AiController::jobMatch()"/>
         <argument key="App\Controller\CompanyController::index" type="service_closure" id=".service_locator.z0A7H.F.App\Controller\CompanyController::index()"/>
         <argument key="App\Controller\CompanyController::update" type="service_closure" id=".service_locator.hSlFnVO.App\Controller\CompanyController::update()"/>
-        <argument key="App\Controller\JobController::index" type="service_closure" id=".service_locator.z0A7H.F.App\Controller\JobController::index()"/>
-        <argument key="App\Controller\JobController::update" type="service_closure" id=".service_locator.y.LjztN.App\Controller\JobController::update()"/>
+        <argument key="App\Controller\JobController::index" type="service_closure" id=".service_locator.ELayUxZ.App\Controller\JobController::index()"/>
+        <argument key="App\Controller\JobController::update" type="service_closure" id=".service_locator.wS0Bpip.App\Controller\JobController::update()"/>
         <argument key="App\Controller\SchoolController::index" type="service_closure" id=".service_locator.z0A7H.F.App\Controller\SchoolController::index()"/>
         <argument key="App\Controller\SchoolController::update" type="service_closure" id=".service_locator.mCngn_M.App\Controller\SchoolController::update()"/>
         <argument key="App\Controller\StudentController::index" type="service_closure" id=".service_locator.cGQEWDw.App\Controller\StudentController::index()"/>
@@ -4140,10 +4188,12 @@
         <argument key="App\Controller\StudentController::delete" type="service_closure" id=".service_locator.0dP2eJy.App\Controller\StudentController::delete()"/>
         <argument key="kernel:registerContainerConfiguration" type="service_closure" id=".service_locator.1vYpZ1B.kernel::registerContainerConfiguration()"/>
         <argument key="kernel:loadRoutes" type="service_closure" id=".service_locator.1vYpZ1B.kernel::loadRoutes()"/>
+        <argument key="App\Controller\AiController:profileSummary" type="service_closure" id=".service_locator.EPFmjIE.App\Controller\AiController::profileSummary()"/>
+        <argument key="App\Controller\AiController:jobMatch" type="service_closure" id=".service_locator.EPFmjIE.App\Controller\AiController::jobMatch()"/>
         <argument key="App\Controller\CompanyController:index" type="service_closure" id=".service_locator.z0A7H.F.App\Controller\CompanyController::index()"/>
         <argument key="App\Controller\CompanyController:update" type="service_closure" id=".service_locator.hSlFnVO.App\Controller\CompanyController::update()"/>
-        <argument key="App\Controller\JobController:index" type="service_closure" id=".service_locator.z0A7H.F.App\Controller\JobController::index()"/>
-        <argument key="App\Controller\JobController:update" type="service_closure" id=".service_locator.y.LjztN.App\Controller\JobController::update()"/>
+        <argument key="App\Controller\JobController:index" type="service_closure" id=".service_locator.ELayUxZ.App\Controller\JobController::index()"/>
+        <argument key="App\Controller\JobController:update" type="service_closure" id=".service_locator.wS0Bpip.App\Controller\JobController::update()"/>
         <argument key="App\Controller\SchoolController:index" type="service_closure" id=".service_locator.z0A7H.F.App\Controller\SchoolController::index()"/>
         <argument key="App\Controller\SchoolController:update" type="service_closure" id=".service_locator.mCngn_M.App\Controller\SchoolController::update()"/>
         <argument key="App\Controller\StudentController:index" type="service_closure" id=".service_locator.cGQEWDw.App\Controller\StudentController::index()"/>
@@ -4292,6 +4342,12 @@
         <argument key="security.csrf.token_manager" type="service_closure" id="security.csrf.token_manager" on-invalid="ignore"/>
         <argument key="parameter_bag" type="service_closure" id="parameter_bag" on-invalid="ignore"/>
       </argument>
+    </service>
+    <service id=".service_locator.TJNRSaV.App\Controller\AiController" class="Symfony\Component\DependencyInjection\ServiceLocator">
+      <tag name="container.service_locator_context" id="App\Controller\AiController"/>
+      <argument>App\Controller\AiController</argument>
+      <argument type="service" id="service_container"/>
+      <factory service=".service_locator.TJNRSaV" method="withContext"/>
     </service>
     <service id=".service_locator.TJNRSaV.App\Controller\AuthController" class="Symfony\Component\DependencyInjection\ServiceLocator">
       <tag name="container.service_locator_context" id="App\Controller\AuthController"/>
@@ -4446,6 +4502,7 @@
       <call method="allowControllers">
         <argument type="collection">
           <argument>App\Kernel</argument>
+          <argument>App\Controller\AiController</argument>
           <argument>App\Controller\AuthController</argument>
           <argument>App\Controller\CompanyController</argument>
           <argument>App\Controller\DefaultController</argument>
@@ -4498,8 +4555,8 @@
     <service id=".errored..service_locator.hSlFnVO.App\Entity\Company" class="App\Entity\Company">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.hSlFnVO&quot;: it needs an instance of &quot;App\Entity\Company&quot; but this type has been excluded because it's a Doctrine entity."/>
     </service>
-    <service id=".errored..service_locator.y.LjztN.App\Entity\JobOffer" class="App\Entity\JobOffer">
-      <tag name="container.error" message="Cannot autowire service &quot;.service_locator.y.LjztN&quot;: it needs an instance of &quot;App\Entity\JobOffer&quot; but this type has been excluded because it's a Doctrine entity."/>
+    <service id=".errored..service_locator.wS0Bpip.App\Entity\JobOffer" class="App\Entity\JobOffer">
+      <tag name="container.error" message="Cannot autowire service &quot;.service_locator.wS0Bpip&quot;: it needs an instance of &quot;App\Entity\JobOffer&quot; but this type has been excluded because it's a Doctrine entity."/>
     </service>
     <service id=".errored..service_locator.mCngn_M.App\Entity\School" class="App\Entity\School">
       <tag name="container.error" message="Cannot autowire service &quot;.service_locator.mCngn_M&quot;: it needs an instance of &quot;App\Entity\School&quot; but this type has been excluded because it's a Doctrine entity."/>
@@ -5277,7 +5334,7 @@
     <service id="doctrine.orm.default_entity_manager.event_manager" alias="doctrine.dbal.default_connection.event_manager"/>
     <service id="doctrine.migrations.metadata_storage" alias="doctrine.migrations.storage.table_storage"/>
     <service id="container.env_var_processors_locator" alias=".service_locator.ryAvHi4" public="true"/>
-    <service id="argument_resolver.controller_locator" alias=".service_locator.jGZ.SKn"/>
+    <service id="argument_resolver.controller_locator" alias=".service_locator.49tHxsq"/>
     <service id="doctrine.id_generator_locator" alias=".service_locator.W55Po6X"/>
     <service id="Psr\Log\LoggerInterface" alias="logger"/>
     <service id="event_dispatcher" alias="debug.event_dispatcher" public="true"/>
@@ -5286,9 +5343,11 @@
     <service id="console.argument_resolver" alias="debug.console.argument_resolver" public="true"/>
     <service id="doctrine.orm.default_metadata_driver" alias=".doctrine.orm.default_metadata_driver"/>
     <service id=".service_locator.c0wzfI4" alias=".service_locator.1vYpZ1B"/>
+    <service id=".service_locator.HmbhFnY" alias=".service_locator.EPFmjIE"/>
     <service id=".service_locator.0ekWYPZ" alias=".service_locator.z0A7H.F"/>
     <service id=".service_locator.qukrB4I" alias=".service_locator.hSlFnVO"/>
-    <service id=".service_locator.6oJWzhh" alias=".service_locator.y.LjztN"/>
+    <service id=".service_locator.x.1oqq8" alias=".service_locator.ELayUxZ"/>
+    <service id=".service_locator.sBgoGHu" alias=".service_locator.wS0Bpip"/>
     <service id=".service_locator.r8D9u8w" alias=".service_locator.mCngn_M"/>
     <service id=".service_locator.R6MLXLi" alias=".service_locator.cGQEWDw"/>
     <service id=".service_locator.W4D35mE" alias=".service_locator.0dP2eJy"/>

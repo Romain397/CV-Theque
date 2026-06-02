@@ -14,10 +14,24 @@ const initials = (student) =>
   `${student.firstName?.[0] || ''}${student.lastName?.[0] || ''}`.toUpperCase() || 'PR';
 
 const visibleSkills = (skills = []) => skills; // show all skills for full profile display
+const visibleTags = (tags = []) =>
+  Array.from(
+    new Set(
+      (Array.isArray(tags) ? tags : [])
+        .map((tag) => (typeof tag === 'string' ? tag : tag?.name))
+        .filter(Boolean)
+    )
+  );
+
+const isKnownName = (name) => {
+  const normalized = `${name || ''}`.trim().toLowerCase();
+  return Boolean(normalized) && normalized !== 'inconnue';
+};
 
 export const StudentCard = ({ student, selected, onSelect }) => {
   const schoolHref = student.school?.id ? `/schools/${student.school.id}` : null;
   const companyHref = student.company?.id ? `/companies/${student.company.id}` : null;
+  const pendingCompany = student.pendingCompanyStatus === 'pending' && String(student.pendingCompanyId || '') === String(student.company?.id || '');
 
   return (
     <Paper
@@ -27,11 +41,12 @@ export const StudentCard = ({ student, selected, onSelect }) => {
       sx={{
         p: 2.2,
         borderRadius: 2,
-        border: selected ? '1px solid #1f5f9d' : '1px solid #e7edf4',
-        bgcolor: '#fff',
+        border: selected ? '1px solid var(--accent-strong)' : '1px solid',
+        borderColor: selected ? 'var(--accent-strong)' : 'divider',
+        bgcolor: 'background.paper',
         boxShadow: selected
           ? '0 14px 34px rgba(29, 78, 124, 0.16)'
-          : '0 10px 28px rgba(17, 36, 59, 0.08)',
+          : '0 10px 28px var(--shadow-soft)',
         cursor: 'pointer',
         transition: 'border-color .2s ease, transform .2s ease, box-shadow .2s ease',
         '&:hover': {
@@ -45,8 +60,8 @@ export const StudentCard = ({ student, selected, onSelect }) => {
           sx={{
             width: 36,
             height: 36,
-            bgcolor: '#dceaf7',
-            color: '#214a71',
+            bgcolor: 'var(--accent-soft)',
+            color: 'var(--accent-strong)',
             fontSize: 13,
             fontWeight: 800,
           }}
@@ -56,7 +71,7 @@ export const StudentCard = ({ student, selected, onSelect }) => {
 
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center', mb: 0.3 }}>
-            <Typography variant="caption" sx={{ color: '#45627d', fontWeight: 800 }}>
+            <Typography variant="caption" sx={{ color: 'var(--text-secondary)', fontWeight: 800 }}>
               {student.location || 'Localisation'}
             </Typography>
             <Chip
@@ -66,27 +81,27 @@ export const StudentCard = ({ student, selected, onSelect }) => {
                 height: 18,
                 borderRadius: 99,
                 bgcolor: '#ffbf18',
-                color: '#102339',
+                color: 'var(--text-primary)',
                 fontSize: 10,
                 fontWeight: 900,
               }}
             />
           </Stack>
 
-          <Typography sx={{ color: '#0f263d', fontWeight: 800, lineHeight: 1.1 }}>
+          <Typography sx={{ color: 'var(--text-primary)', fontWeight: 800, lineHeight: 1.1 }}>
             {student.firstName} {student.lastName}
           </Typography>
-          <Typography variant="body2" sx={{ color: '#607287', mt: 0.2 }}>
+          <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 0.2 }}>
             {student.jobTitle || 'Profil étudiant'}
           </Typography>
-          <Typography variant="caption" sx={{ color: '#7a8794', display: 'block', mt: 0.5 }}>
-            {schoolHref ? (
+          <Typography variant="caption" sx={{ color: 'var(--text-secondary)', display: 'block', mt: 0.5 }}>
+            {schoolHref && isKnownName(student.school?.name) ? (
               <Link
                 component={RouterLink}
                 to={schoolHref}
                 onClick={(event) => event.stopPropagation()}
                 underline="hover"
-                sx={{ color: '#7a8794', fontWeight: 800 }}
+                sx={{ color: 'var(--text-secondary)', fontWeight: 800 }}
               >
                 {student.school?.name}
               </Link>
@@ -94,21 +109,21 @@ export const StudentCard = ({ student, selected, onSelect }) => {
               'École non renseignée'
             )}
           </Typography>
-          {student.company && (
-            <Typography variant="caption" sx={{ color: '#7a8794', display: 'block', mt: 0.3 }}>
+          {student.company && !pendingCompany && (
+            <Typography variant="caption" sx={{ color: 'var(--text-secondary)', display: 'block', mt: 0.3 }}>
               Entreprise:{' '}
-              {companyHref ? (
+              {companyHref && isKnownName(student.company?.name) ? (
                 <Link
                   component={RouterLink}
                   to={companyHref}
                   onClick={(event) => event.stopPropagation()}
                   underline="hover"
-                  sx={{ color: '#7a8794', fontWeight: 800 }}
+                  sx={{ color: 'var(--text-secondary)', fontWeight: 800 }}
                 >
                   {student.company.name}
                 </Link>
               ) : (
-                student.company.name
+                student.company?.name || 'Inconnue'
               )}
             </Typography>
           )}
@@ -122,14 +137,14 @@ export const StudentCard = ({ student, selected, onSelect }) => {
           mt: 1.8,
           height: 21,
           borderRadius: 1,
-          bgcolor: '#e9f3fb',
-          color: '#2d6697',
+          bgcolor: 'var(--accent-soft)',
+          color: 'var(--accent-strong)',
           fontSize: 10,
           fontWeight: 800,
         }}
       />
 
-      <Typography variant="body2" sx={{ color: '#596b7e', mt: 1.5, minHeight: 42 }}>
+      <Typography variant="body2" sx={{ color: 'var(--text-secondary)', mt: 1.5, minHeight: 42 }}>
         Profil orienté {student.jobTitle || 'numérique'}, fiable et curieux, prêt à renforcer une
         équipe projet.
       </Typography>
@@ -140,14 +155,14 @@ export const StudentCard = ({ student, selected, onSelect }) => {
             key={`${skill.name}-${index}`}
             label={`${skill.name} ${skill.level || 'Intermédiaire'}`}
             size="small"
-            sx={{
-              borderRadius: 99,
-              bgcolor: '#f5efe2',
-              color: '#514832',
-              fontSize: 11,
-              fontWeight: 700,
-              border: '1px solid #e9ddc8',
-            }}
+              sx={{
+                borderRadius: 99,
+                bgcolor: 'var(--muted-bg)',
+                color: 'var(--text-primary)',
+                fontSize: 11,
+                fontWeight: 700,
+                border: '1px solid var(--muted-border)',
+              }}
           />
         ))}
         {(!student.skills || student.skills.length === 0) && (
@@ -156,14 +171,34 @@ export const StudentCard = ({ student, selected, onSelect }) => {
             size="small"
             sx={{
               borderRadius: 99,
-              bgcolor: '#f5efe2',
-              color: '#514832',
+              bgcolor: 'var(--muted-bg)',
+              color: 'var(--text-primary)',
               fontSize: 11,
               fontWeight: 700,
             }}
-          />
+            />
         )}
       </Stack>
+
+      {visibleTags(student.tags).length > 0 && (
+        <Stack direction="row" gap={0.8} sx={{ flexWrap: 'wrap', mt: 1.1 }}>
+          {visibleTags(student.tags).slice(0, 4).map((tag) => (
+            <Chip
+              key={tag}
+              label={tag}
+              size="small"
+              sx={{
+                borderRadius: 99,
+                bgcolor: 'var(--accent-soft)',
+                color: 'var(--accent-strong)',
+                fontSize: 11,
+                fontWeight: 700,
+                border: '1px solid var(--muted-border)',
+              }}
+            />
+          ))}
+        </Stack>
+      )}
 
       <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', mt: 1.8 }}>
         <Button
@@ -175,7 +210,7 @@ export const StudentCard = ({ student, selected, onSelect }) => {
           sx={{
             px: 0,
             minWidth: 'auto',
-            color: '#184b78',
+            color: 'var(--accent-strong)',
             fontSize: 12,
             fontWeight: 900,
             textTransform: 'none',

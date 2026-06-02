@@ -12,6 +12,20 @@
 // Elle est lue depuis le fichier .env.local
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
+const getStoredToken = (override = null) => {
+  if (override) return override;
+
+  const directToken = localStorage.getItem('cv_token');
+  if (directToken) return directToken;
+
+  try {
+    const auth = JSON.parse(localStorage.getItem('cv_auth') || 'null');
+    return auth?.token || null;
+  } catch {
+    return null;
+  }
+};
+
 /**
  * RÉCUPÉRER la liste de TOUS les étudiants
  * 
@@ -21,30 +35,57 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
  * @returns {Promise<Array>} Liste des étudiants
  */
 export const getStudents = async () => {
-  const token = localStorage.getItem('cv_token');
+  const token = getStoredToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const response = await fetch(`${API_BASE_URL}/users`, { headers });
   if (!response.ok) {
     throw new Error(`Erreur: ${response.status}`);
   }
   const users = await response.json();
+  const schoolsById = new Map(
+    (users || [])
+      .filter((user) => user.role === 'school')
+      .map((school) => [String(school.id), school])
+  );
+  const companiesById = new Map(
+    (users || [])
+      .filter((user) => user.role === 'company')
+      .map((company) => [String(company.id), company])
+  );
   // map users with role 'student' to student shape
-  return (users || []).filter(u => u.role === 'student').map(u => ({
-    id: u.id,
-    firstName: u.profile?.firstName || '',
-    lastName: u.profile?.lastName || '',
-    age: u.profile?.age || 0,
-    jobTitle: u.profile?.jobTitle || '',
-    location: u.profile?.location || '',
-    skills: u.profile?.skills || [],
-    school: u.profile?.schoolId ? { id: u.profile.schoolId } : null,
-    company: u.profile?.companyId ? { id: u.profile.companyId } : null,
-    // pending request fields
-    pendingSchoolId: u.profile?.pendingSchoolId || null,
-    pendingSchoolStatus: u.profile?.pendingSchoolStatus || null,
-    pendingCompanyId: u.profile?.pendingCompanyId || null,
-    pendingCompanyStatus: u.profile?.pendingCompanyStatus || null,
-  }));
+  return (users || []).filter(u => u.role === 'student').map(u => {
+    const school = u.profile?.schoolId ? schoolsById.get(String(u.profile.schoolId)) : null;
+    const company = u.profile?.companyId ? companiesById.get(String(u.profile.companyId)) : null;
+
+    return {
+      id: u.id,
+      email: u.email || '',
+      firstName: u.profile?.firstName || '',
+      lastName: u.profile?.lastName || '',
+      age: u.profile?.age || 0,
+      jobTitle: u.profile?.jobTitle || '',
+      location: u.profile?.location || '',
+      bio: u.profile?.bio || '',
+      skills: u.profile?.skills || [],
+      tags: u.profile?.tags || [],
+      projects: u.profile?.projects || [],
+      school: u.profile?.schoolId ? {
+        id: u.profile.schoolId,
+        name: school?.name || '',
+        location: school?.profile?.location || '',
+      } : null,
+      company: u.profile?.companyId ? {
+        id: u.profile.companyId,
+        name: company?.name || '',
+        location: company?.profile?.location || '',
+      } : null,
+      // pending request fields
+      pendingSchoolId: u.profile?.pendingSchoolId || null,
+      pendingSchoolStatus: u.profile?.pendingSchoolStatus || null,
+      pendingCompanyId: u.profile?.pendingCompanyId || null,
+      pendingCompanyStatus: u.profile?.pendingCompanyStatus || null,
+    };
+  });
 };
 
 /**
@@ -57,7 +98,7 @@ export const getStudents = async () => {
  * @returns {Promise<Object>} Les données de l'étudiant
  */
 export const getStudentById = async (id) => {
-  const token = localStorage.getItem('cv_token');
+  const token = getStoredToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const response = await fetch(`${API_BASE_URL}/users/${id}`, { headers });
   if (!response.ok) {
@@ -65,16 +106,40 @@ export const getStudentById = async (id) => {
   }
   const u = await response.json();
   if (!u) return null;
+  let school = null;
+  let company = null;
+
+  if (u.profile?.schoolId || u.profile?.companyId) {
+    const usersResponse = await fetch(`${API_BASE_URL}/users`, { headers }).catch(() => null);
+    if (usersResponse?.ok) {
+      const users = await usersResponse.json();
+      school = (users || []).find((user) => user.role === 'school' && String(user.id) === String(u.profile?.schoolId)) || null;
+      company = (users || []).find((user) => user.role === 'company' && String(user.id) === String(u.profile?.companyId)) || null;
+    }
+  }
+
   return {
     id: u.id,
+    email: u.email || '',
     firstName: u.profile?.firstName || '',
     lastName: u.profile?.lastName || '',
     age: u.profile?.age || 0,
     jobTitle: u.profile?.jobTitle || '',
     location: u.profile?.location || '',
+    bio: u.profile?.bio || '',
     skills: u.profile?.skills || [],
-    school: u.profile?.schoolId ? { id: u.profile.schoolId } : null,
-    company: u.profile?.companyId ? { id: u.profile.companyId } : null,
+    tags: u.profile?.tags || [],
+    projects: u.profile?.projects || [],
+    school: u.profile?.schoolId ? {
+      id: u.profile.schoolId,
+      name: school?.name || '',
+      location: school?.profile?.location || '',
+    } : null,
+    company: u.profile?.companyId ? {
+      id: u.profile.companyId,
+      name: company?.name || '',
+      location: company?.profile?.location || '',
+    } : null,
     pendingSchoolId: u.profile?.pendingSchoolId || null,
     pendingSchoolStatus: u.profile?.pendingSchoolStatus || null,
     pendingCompanyId: u.profile?.pendingCompanyId || null,
@@ -98,7 +163,7 @@ export const getStudentById = async (id) => {
  * @returns {Promise<Object>} L'étudiant créé (avec l'ID assigné par l'API)
  */
 export const createStudent = async (studentData) => {
-  const token = localStorage.getItem('cv_token');
+  const token = getStoredToken();
   const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
   const response = await fetch(`${API_BASE_URL}/register`, {
     method: 'POST',
@@ -124,8 +189,8 @@ export const createStudent = async (studentData) => {
  * @param {Object} studentData - Les nouvelles données
  * @returns {Promise<Object>} L'étudiant mis à jour
  */
-export const updateStudent = async (id, studentData) => {
-  const token = localStorage.getItem('cv_token');
+export const updateStudent = async (id, studentData, tokenOverride = null) => {
+  const token = getStoredToken(tokenOverride);
   const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: 'PATCH',
@@ -133,7 +198,8 @@ export const updateStudent = async (id, studentData) => {
     body: JSON.stringify({ profile: studentData }),
   });
   if (!response.ok) {
-    throw new Error(`Erreur: ${response.status}`);
+    const body = await response.json().catch(() => ({}));
+    throw new Error(body.error || body.detail || `Erreur: ${response.status}`);
   }
 
   return await response.json();
@@ -149,7 +215,7 @@ export const updateStudent = async (id, studentData) => {
  * @returns {Promise<void>}
  */
 export const deleteStudent = async (id) => {
-  const token = localStorage.getItem('cv_token');
+  const token = getStoredToken();
   const headers = token ? { Authorization: `Bearer ${token}` } : {};
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: 'DELETE',
@@ -164,7 +230,7 @@ export const deleteStudent = async (id) => {
  * Set user approved/unapproved via PATCH
  */
 export const setUserApproved = async (id, approved) => {
-  const token = localStorage.getItem('cv_token');
+  const token = getStoredToken();
   const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
   const response = await fetch(`${API_BASE_URL}/users/${id}`, {
     method: 'PATCH',
@@ -178,7 +244,7 @@ export const setUserApproved = async (id, approved) => {
 };
 
 export const respondPendingSchool = async (id, action) => {
-  const token = localStorage.getItem('cv_token');
+  const token = getStoredToken();
   const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
   const response = await fetch(`${API_BASE_URL}/users/${id}/pending-school`, {
     method: 'POST',
@@ -192,7 +258,7 @@ export const respondPendingSchool = async (id, action) => {
 };
 
 export const respondPendingCompany = async (id, action) => {
-  const token = localStorage.getItem('cv_token');
+  const token = getStoredToken();
   const headers = { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) };
   const response = await fetch(`${API_BASE_URL}/users/${id}/pending-company`, {
     method: 'POST',

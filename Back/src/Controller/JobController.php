@@ -4,6 +4,8 @@ namespace App\Controller;
 
 use App\Entity\JobOffer;
 use App\Entity\Company;
+use App\Service\AiEnrichmentService;
+use App\Service\HelloworkOfferScraper;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -14,25 +16,30 @@ use Symfony\Component\Routing\Attribute\Route;
 final class JobController extends AbstractController
 {
     #[Route('/jobs', name: 'jobs_index', methods: ['GET'])]
-    public function index(EntityManagerInterface $em): JsonResponse
+    public function index(EntityManagerInterface $em, HelloworkOfferScraper $helloworkOfferScraper, AiEnrichmentService $aiEnrichmentService): JsonResponse
     {
         $jobs = $em->getRepository(JobOffer::class)->findBy([], ['id' => 'DESC']);
-
-        return $this->json(array_map(
+        $helloworkJobs = $helloworkOfferScraper->fetchLatestOffers(5);
+        $localJobs = array_map(
             fn (JobOffer $job): array => $this->formatJob($job),
             $jobs
-        ));
+        );
+
+        return $this->json($aiEnrichmentService->enrichJobs(array_merge(
+            $helloworkJobs,
+            $localJobs
+        ), false));
     }
 
     #[Route('/jobs/{id}', name: 'jobs_update', methods: ['PUT'])]
-    public function update(JobOffer $job, Request $request, EntityManagerInterface $em): JsonResponse
+    public function update(JobOffer $job, Request $request, EntityManagerInterface $em, AiEnrichmentService $aiEnrichmentService): JsonResponse
     {
         $data = $this->getRequestData($request);
         $this->hydrateJob($job, $data, $em);
 
         $em->flush();
 
-        return $this->json($this->formatJob($job));
+        return $this->json($aiEnrichmentService->enrichJob($this->formatJob($job), false));
     }
 
     private function getRequestData(Request $request): array
@@ -85,12 +92,16 @@ final class JobController extends AbstractController
             'title' => $job->getTitle(),
             'description' => $job->getDescription(),
             'tags' => array_values($job->getTags()),
+            'source' => 'Local',
             'company' => $job->getCompany() ? [
                 'id' => $job->getCompany()->getId(),
                 'name' => $job->getCompany()->getName(),
                 'location' => $job->getCompany()->getLocation(),
                 'specialties' => array_values($job->getCompany()->getSpecialties()),
             ] : null,
+            'externalUrl' => null,
+            'publishedAt' => null,
+            'details' => [],
         ];
     }
 

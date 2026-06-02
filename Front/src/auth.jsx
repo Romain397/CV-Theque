@@ -4,7 +4,7 @@ const AuthContext = createContext(null);
 
 const DEFAULT_ADMIN = {
   id: 1,
-  name: 'Administrateur CV-Theque',
+  name: 'Administrateur GotT',
   email: 'admin@cvtheque.local',
   password: 'admin123',
   role: 'admin',
@@ -24,7 +24,6 @@ function normalizeUsers(users) {
     profile: {
       headline: '',
       bio: '',
-      displayName: '',
       tags: [],
       schoolId: '',
       companyId: '',
@@ -38,6 +37,17 @@ function normalizeUsers(users) {
 }
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
+
+function readStoredAuth() {
+  try {
+    const auth = JSON.parse(localStorage.getItem('cv_auth') || 'null');
+    const token = localStorage.getItem('cv_token') || auth?.token || null;
+    const user = auth?.user || null;
+    return { user, token };
+  } catch {
+    return { user: null, token: localStorage.getItem('cv_token') || null };
+  }
+}
 
 // Synchronous loader used by UI for immediate rendering (reads localStorage).
 // We keep a background sync to update local storage from the backend when possible.
@@ -81,21 +91,24 @@ export function saveUsers(users){
   (async () => {
     try {
       const token = localStorage.getItem('cv_token');
+      const auth = JSON.parse(localStorage.getItem('cv_auth') || 'null');
+      const currentUser = auth?.user || null;
       const authHeader = token ? { Authorization: `Bearer ${token}` } : {};
-      for (const user of users) {
-        if (user.id) {
-          await fetch(`${API_URL}/users/${user.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json', ...authHeader },
-            body: JSON.stringify(user),
-          });
-        } else {
-          await fetch(`${API_URL}/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(user),
-          });
-        }
+
+      if (!currentUser) return;
+
+      const usersToSync = currentUser.role === 'admin'
+        ? users
+        : users.filter((user) => String(user.id) === String(currentUser.id));
+
+      for (const user of usersToSync) {
+        if (!user?.id) continue;
+
+        await fetch(`${API_URL}/users/${user.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', ...authHeader },
+          body: JSON.stringify(user),
+        });
       }
     } catch (e) {
       // network error — keep local copy
@@ -140,18 +153,32 @@ export function updateUserRecord(userId, updater) {
 
 export function AuthProvider({ children }){
   const [user, setUser] = useState(() => {
-    const raw = localStorage.getItem('cv_auth');
-    return raw ? JSON.parse(raw).user : null;
+    return readStoredAuth().user;
   });
-  const [token, setToken] = useState(() => localStorage.getItem('cv_token'));
+  const [token, setToken] = useState(() => readStoredAuth().token);
 
   useEffect(()=>{
-    if (user && token) localStorage.setItem('cv_auth', JSON.stringify({ user, token }));
-    else { localStorage.removeItem('cv_auth'); localStorage.removeItem('cv_token'); }
+    if (user && token) {
+      localStorage.setItem('cv_auth', JSON.stringify({ user, token }));
+      localStorage.setItem('cv_token', token);
+    } else {
+      localStorage.removeItem('cv_auth');
+      localStorage.removeItem('cv_token');
+    }
   }, [user, token]);
 
   useEffect(() => {
-    if (!user || !token) return;
+    if (!user) return;
+
+    if (!token) {
+      const stored = readStoredAuth();
+      if (stored.token) {
+        setToken(stored.token);
+        return;
+      }
+    }
+
+    if (!token) return;
 
     const users = loadUsers();
     const persistedUser = users.find((candidate) => candidate.id === user.id);

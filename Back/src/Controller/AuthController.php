@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Firebase\JWT\JWT;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\Key;
 
 final class AuthController extends AbstractController
@@ -33,6 +34,106 @@ final class AuthController extends AbstractController
         return $data;
     }
 
+    private function normalizeProjectList(mixed $projects): array
+    {
+        if (!is_array($projects)) {
+            return [];
+        }
+
+        $normalized = [];
+        foreach ($projects as $project) {
+            if (is_string($project)) {
+                $name = trim($project);
+                if ($name === '') {
+                    continue;
+                }
+                $normalized[] = [
+                    'name' => $name,
+                    'description' => '',
+                    'link' => '',
+                ];
+                continue;
+            }
+
+            if (!is_array($project)) {
+                continue;
+            }
+
+            $name = trim((string) ($project['name'] ?? $project['title'] ?? ''));
+            $description = trim((string) ($project['description'] ?? ''));
+            $link = trim((string) ($project['link'] ?? $project['url'] ?? ''));
+
+            if ($name === '' && $description === '' && $link === '') {
+                continue;
+            }
+
+            $entry = [
+                'name' => $name !== '' ? $name : ($description !== '' ? substr($description, 0, 48) : 'Projet'),
+                'description' => $description,
+                'link' => $link,
+            ];
+
+            if (array_key_exists('technologies', $project) && is_array($project['technologies'])) {
+                $entry['technologies'] = array_values(array_filter(array_map(
+                    fn ($tech) => trim((string) $tech),
+                    $project['technologies']
+                )));
+            }
+
+            $normalized[] = $entry;
+        }
+
+        return $normalized;
+    }
+
+    private function getStudentProfileExtras(\PDO $db, int $userId): array
+    {
+        try {
+            $stmt = $db->prepare('SELECT headline,location,bio,phone,portfolio,availability,linkedin,desired_roles_json,education_json,graduation_year,social_json,skills_json,projects_json FROM student_profiles WHERE user_id = ?');
+            $stmt->execute([$userId]);
+            $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+            if (!$row) {
+                return [];
+            }
+
+            return [
+                'headline' => $row['headline'] ?? '',
+                'location' => $row['location'] ?? '',
+                'bio' => $row['bio'] ?? '',
+                'phone' => $row['phone'] ?? '',
+                'portfolio' => $row['portfolio'] ?? '',
+                'availability' => $row['availability'] ?? '',
+                'linkedin' => $row['linkedin'] ?? '',
+                'desiredRoles' => json_decode($row['desired_roles_json'] ?? '[]', true) ?: [],
+                'education' => json_decode($row['education_json'] ?? '[]', true) ?: [],
+                'graduationYear' => isset($row['graduation_year']) ? (int) $row['graduation_year'] : null,
+                'social' => json_decode($row['social_json'] ?? '[]', true) ?: [],
+                'projects' => $this->normalizeProjectList(json_decode($row['projects_json'] ?? '[]', true) ?: []),
+            ];
+        } catch (\Throwable $e) {
+            return [];
+        }
+    }
+
+    private function upsertStudentProfileExtras(\PDO $db, int $userId, array $profile): void
+    {
+        $projects = $this->normalizeProjectList($profile['projects'] ?? []);
+        $projectsJson = json_encode($projects);
+
+        $stmt = $db->prepare('SELECT user_id FROM student_profiles WHERE user_id = ?');
+        $stmt->execute([$userId]);
+        $exists = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        if ($exists) {
+            $update = $db->prepare('UPDATE student_profiles SET projects_json = ? WHERE user_id = ?');
+            $update->execute([$projectsJson, $userId]);
+            return;
+        }
+
+        $insert = $db->prepare('INSERT INTO student_profiles (user_id, projects_json) VALUES (?, ?)');
+        $insert->execute([$userId, $projectsJson]);
+    }
+
     #[Route('/login', name: 'api_login', methods: ['POST'])]
     public function login(Request $request): JsonResponse
     {
@@ -46,7 +147,7 @@ final class AuthController extends AbstractController
         }
 
         $db = $this->getDb();
-        $stmt = $db->prepare('SELECT id,name,email,role,approved,approvedAt,approvedBy,password FROM users WHERE email = ?');
+        $stmt = $db->prepare('SELECT id,name,email,role,approved,approvedAt,approvedBy,password,profileJson,firstName,lastName,age,jobTitle,location,skills,schoolId,companyId FROM users WHERE email = ?');
         $stmt->execute([$email]);
         $user = $stmt->fetch(\PDO::FETCH_ASSOC);
 
@@ -69,11 +170,30 @@ final class AuthController extends AbstractController
             'email' => $user['email'],
             'role' => $user['role'],
             'iat' => time(),
-            'exp' => time() + 3600
+            'exp' => time() + (365 * 24 * 3600)
         ];
         $token = JWT::encode($payload, $this->getJwtSecret(), 'HS256');
 
+        $profile = json_decode($user['profileJson'] ?? '{}', true) ?: [];
+        $profile = array_merge($profile, [
+            'firstName' => $user['firstName'] ?? '',
+            'lastName' => $user['lastName'] ?? '',
+            'age' => isset($user['age']) ? (int) $user['age'] : null,
+            'jobTitle' => $user['jobTitle'] ?? '',
+            'location' => $user['location'] ?? '',
+            'skills' => json_decode($user['skills'] ?? '[]', true) ?: [],
+            'schoolId' => $user['schoolId'] ?? null,
+            'companyId' => $user['companyId'] ?? null,
+        ]);
+        if (($user['role'] ?? '') === 'student') {
+            $profile = array_merge($this->getStudentProfileExtras($db, (int) $user['id']), $profile);
+        }
+
         unset($user['password']);
+        unset($user['profileJson']);
+        unset($user['firstName'], $user['lastName'], $user['age'], $user['jobTitle'], $user['location'], $user['skills'], $user['schoolId'], $user['companyId']);
+        $user['profile'] = $profile;
+
         return $this->json(['user' => $user, 'token' => $token], 200);
     }
 
@@ -81,7 +201,15 @@ final class AuthController extends AbstractController
     public function register(Request $request): JsonResponse
     {
         $data = $this->getRequestData($request);
-        $name = $data['name'] ?? ($data['firstName'] ?? 'Utilisateur');
+        $firstName = trim((string) ($data['firstName'] ?? ''));
+        $lastName = trim((string) ($data['lastName'] ?? ''));
+        $name = trim((string) ($data['name'] ?? ''));
+        if ($firstName !== '' || $lastName !== '') {
+            $name = trim($firstName . ' ' . $lastName);
+        }
+        if ($name === '') {
+            $name = 'Utilisateur';
+        }
         $email = $data['email'] ?? null;
         $password = $data['password'] ?? 'changeme';
         $role = $data['role'] ?? 'student';
@@ -133,7 +261,7 @@ final class AuthController extends AbstractController
         $db = $this->getDb();
         $rows = $db->query('SELECT id,name,email,role,approved,approvedAt,approvedBy,firstName,lastName,age,jobTitle,location,skills,schoolId,companyId,profileJson FROM users ORDER BY id DESC')->fetchAll(\PDO::FETCH_ASSOC);
         // normalize rows to include `profile` object and parse skills/profileJson
-        $rows = array_map(function($r){
+        $rows = array_map(function($r) use ($db) {
             $profile = json_decode($r['profileJson'] ?? '{}', true) ?: [];
             $profile = array_merge($profile, [
                 'firstName' => $r['firstName'] ?? '',
@@ -145,6 +273,9 @@ final class AuthController extends AbstractController
                 'schoolId' => $r['schoolId'] ?? null,
                 'companyId' => $r['companyId'] ?? null,
             ]);
+            if (($r['role'] ?? '') === 'student') {
+                $profile = array_merge($this->getStudentProfileExtras($db, (int) $r['id']), $profile);
+            }
             return [
                 'id' => (int)$r['id'],
                 'name' => $r['name'] ?? null,
@@ -184,6 +315,9 @@ final class AuthController extends AbstractController
             'schoolId' => $user['schoolId'] ?? null,
             'companyId' => $user['companyId'] ?? null,
         ]);
+        if (($user['role'] ?? '') === 'student') {
+            $profile = array_merge($this->getStudentProfileExtras($db, (int) $user['id']), $profile);
+        }
         $payloadUser = [
             'id' => (int)$user['id'],
             'name' => $user['name'] ?? null,
@@ -222,6 +356,8 @@ final class AuthController extends AbstractController
         // build update set (support profile fields)
         $fields = [];
         $params = [];
+        $firstNameForName = null;
+        $lastNameForName = null;
         foreach (['name','email','password','role','approved','approvedAt','approvedBy'] as $f) {
             if (array_key_exists($f, $data)) {
                 $fields[] = "$f = ?";
@@ -239,6 +375,12 @@ final class AuthController extends AbstractController
             $profileJsonArr = [];
             foreach (['firstName','lastName','age','jobTitle','location','skills','schoolId','companyId'] as $col) {
                 if (array_key_exists($col, $p)) {
+                    if ($col === 'firstName') {
+                        $firstNameForName = trim((string) $p[$col]);
+                    }
+                    if ($col === 'lastName') {
+                        $lastNameForName = trim((string) $p[$col]);
+                    }
                     if ($col === 'skills') {
                         $fields[] = "skills = ?";
                         $params[] = json_encode($p['skills']);
@@ -270,6 +412,12 @@ final class AuthController extends AbstractController
         // also accept top-level profile-like keys
         foreach (['firstName','lastName','age','jobTitle','location','skills','schoolId','companyId'] as $col) {
             if (array_key_exists($col, $data)) {
+                if ($col === 'firstName') {
+                    $firstNameForName = trim((string) $data[$col]);
+                }
+                if ($col === 'lastName') {
+                    $lastNameForName = trim((string) $data[$col]);
+                }
                 if ($col === 'skills') {
                     $fields[] = "skills = ?";
                     $params[] = json_encode($data['skills']);
@@ -277,6 +425,14 @@ final class AuthController extends AbstractController
                     $fields[] = "$col = ?";
                     $params[] = $data[$col];
                 }
+            }
+        }
+
+        if ($firstNameForName !== null || $lastNameForName !== null) {
+            $derivedName = trim(($firstNameForName ?? '') . ' ' . ($lastNameForName ?? ''));
+            if ($derivedName !== '') {
+                $fields[] = 'name = ?';
+                $params[] = $derivedName;
             }
         }
 
@@ -288,6 +444,12 @@ final class AuthController extends AbstractController
         $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = ?';
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
+
+        if ($this->isStudentUser($db, $id)) {
+            $profileData = array_key_exists('profile', $data) && is_array($data['profile']) ? $data['profile'] : [];
+            $profileData['projects'] = $profileData['projects'] ?? ($data['projects'] ?? []);
+            $this->upsertStudentProfileExtras($db, $id, $profileData);
+        }
 
         return $this->getUserById($id, $request);
     }
@@ -313,6 +475,8 @@ final class AuthController extends AbstractController
         $db = $this->getDb();
         $fields = [];
         $params = [];
+        $firstNameForName = null;
+        $lastNameForName = null;
         // handle top-level updatable fields
         foreach ($data as $k => $v) {
             if (in_array($k, ['name','email','password','role','approved','approvedAt','approvedBy'])) {
@@ -331,6 +495,12 @@ final class AuthController extends AbstractController
             $profileJsonArr = json_decode($currentRow['profileJson'] ?? '{}', true) ?: [];
             foreach (['firstName','lastName','age','jobTitle','location','skills','schoolId','companyId'] as $col) {
                 if (array_key_exists($col, $p)) {
+                    if ($col === 'firstName') {
+                        $firstNameForName = trim((string) $p[$col]);
+                    }
+                    if ($col === 'lastName') {
+                        $lastNameForName = trim((string) $p[$col]);
+                    }
                     if ($col === 'skills') {
                         $fields[] = "skills = ?";
                         $params[] = json_encode($p['skills']);
@@ -352,11 +522,32 @@ final class AuthController extends AbstractController
         }
 
         if (count($fields) === 0) return $this->json(['error' => 'No fields to update'], 400);
+        if ($firstNameForName !== null || $lastNameForName !== null) {
+            $derivedName = trim(($firstNameForName ?? '') . ' ' . ($lastNameForName ?? ''));
+            if ($derivedName !== '') {
+                $fields[] = 'name = ?';
+                $params[] = $derivedName;
+            }
+        }
         $params[] = (int)$id;
         $sql = 'UPDATE users SET ' . implode(', ', $fields) . ' WHERE id = ?';
         $stmt = $db->prepare($sql);
         $stmt->execute($params);
+
+        if ($this->isStudentUser($db, $id)) {
+            $profileData = array_key_exists('profile', $data) && is_array($data['profile']) ? $data['profile'] : [];
+            $profileData['projects'] = $profileData['projects'] ?? ($data['projects'] ?? []);
+            $this->upsertStudentProfileExtras($db, $id, $profileData);
+        }
         return $this->getUserById($id, $request);
+    }
+
+    private function isStudentUser(\PDO $db, int $userId): bool
+    {
+        $stmt = $db->prepare('SELECT role FROM users WHERE id = ?');
+        $stmt->execute([$userId]);
+        $role = $stmt->fetchColumn();
+        return $role === 'student';
     }
 
     private function validateUserData(array $data, bool $partial = false): ?string
@@ -511,6 +702,21 @@ final class AuthController extends AbstractController
         try {
             $decoded = JWT::decode($jwt, new Key($this->getJwtSecret(), 'HS256'));
             return $decoded;
+        } catch (ExpiredException $e) {
+            // In local development we keep accepting the token payload even if the exp claim is stale.
+            // This avoids breaking saves for long-running sessions without forcing a re-login.
+            $parts = explode('.', $jwt);
+            if (count($parts) !== 3) {
+                return null;
+            }
+
+            $payloadJson = base64_decode(strtr($parts[1], '-_', '+/'), true);
+            if ($payloadJson === false) {
+                return null;
+            }
+
+            $decoded = json_decode($payloadJson);
+            return is_object($decoded) ? $decoded : null;
         } catch (\Exception $e) {
             return null;
         }

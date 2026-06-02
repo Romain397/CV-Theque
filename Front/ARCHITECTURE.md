@@ -1,4 +1,4 @@
-# Architecture Frontend - CVthèque
+# Architecture Frontend - GotT
 
 ## Vue d'ensemble
 

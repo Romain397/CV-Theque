@@ -23,6 +23,10 @@ export const schoolProfiles = {
       'Accompagnement carrière et coaching portfolio',
       'Mise en relation avec les entreprises partenaires',
     ],
+    campusPerks: [
+      'Projets concrets à présenter dans un portfolio',
+      'Accompagnement carrière pour préparer les entretiens',
+    ],
     socials: buildLinks('Ecole Hexagone', 'https://www.ecole-hexagone.com/'),
   },
   'Ecole du Web': {
@@ -41,6 +45,10 @@ export const schoolProfiles = {
       'Parcours intensifs orientés mise en pratique',
       'Projets collectifs et cas d’usage métiers',
       'Suivi de l’employabilité des étudiants',
+    ],
+    campusPerks: [
+      'Projets collectifs réguliers pour progresser en équipe',
+      'Cas pratiques proches des besoins d’entreprise',
     ],
     socials: buildLinks('Ecole du Web', 'https://www.ecoleduweb.com/'),
   },
@@ -92,23 +100,37 @@ export const companyProfiles = {
 export const companyOrder = ['HexaCorp', 'WebSolutions'];
 
 export const getSchoolProfile = (school) => {
+  const schoolLocations = Array.isArray(school?.locations) && school.locations.length
+    ? school.locations
+    : (school?.location ? [school.location] : []);
+  const schoolLocationLabel = schoolLocations.length > 1
+    ? `${schoolLocations.length} localisations`
+    : schoolLocations[0];
   const fallback = schoolProfiles[school?.name] || {
-  tagline: 'Profil école',
-  summary: 'Cette école est présente dans la base, avec un profil enrichi côté front.',
-  website: '#',
-  metrics: [
-    { label: 'Campus', value: school?.location || 'Non précisé' },
-    { label: 'Promotion', value: '—' },
-    { label: 'Diplômés', value: '—' },
-    { label: 'Focus', value: 'Formation web' },
-  ],
-  specialties: ['Développement web', 'Projet', 'Alternance'],
-  highlights: ['Informations complémentaires à enrichir'],
-  socials: buildLinks(school?.name || 'Ecole', '#'),
+    tagline: '',
+    summary: '',
+    bio: '',
+    website: '',
+    metrics: [
+      { label: 'Campus', value: schoolLocationLabel || 'Non renseigné' },
+      { label: 'Promotion', value: 'Non renseigné' },
+      { label: 'Diplômés', value: 'Non renseigné' },
+      { label: 'Focus', value: 'Non renseigné' },
+    ],
+    specialties: [],
+    highlights: [],
+    campusPerks: [],
+    socials: buildLinks(school?.name || 'Ecole', ''),
   };
 
   return {
     ...fallback,
+    tagline: school?.headline || fallback.tagline,
+    summary: school?.headline || school?.bio || fallback.summary,
+    website: school?.website || fallback.website,
+    bio: school?.bio || fallback.bio,
+    highlights: Array.isArray(school?.highlights) && school.highlights.length ? school.highlights : fallback.highlights,
+    campusPerks: Array.isArray(school?.campusPerks) && school.campusPerks.length ? school.campusPerks : fallback.campusPerks,
     specialties: Array.isArray(school?.specialties) && school.specialties.length ? school.specialties : fallback.specialties,
   };
 };
@@ -121,12 +143,18 @@ export const getSchoolSpecialties = (school) => {
 export const getSchoolNameById = (id) => schoolOrder[Number(id) - 1] || schoolOrder[0];
 
 export const getCompanyProfile = (company) => {
+  const companyLocations = Array.isArray(company?.locations) && company.locations.length
+    ? company.locations
+    : (company?.location ? [company.location] : []);
+  const companyLocationLabel = companyLocations.length > 1
+    ? `${companyLocations.length} localisations`
+    : companyLocations[0];
   const fallback = companyProfiles[company?.name] || {
   tagline: 'Profil entreprise',
   summary: 'Cette entreprise est présente dans la base, avec un profil enrichi côté front.',
   website: '#',
   metrics: [
-    { label: 'Ville', value: company?.location || 'Non précisé' },
+    { label: 'Ville', value: companyLocationLabel || 'Non précisé' },
     { label: 'Taille', value: '—' },
     { label: 'Postes ouverts', value: '—' },
     { label: 'Stack', value: 'Web' },
