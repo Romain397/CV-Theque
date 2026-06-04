@@ -19,6 +19,147 @@ flowchart LR
   Companies --> Jobs
 ```
 
+## Schéma SQL
+
+```mermaid
+erDiagram
+  users {
+    INTEGER id PK
+    TEXT name
+    TEXT email UK
+    TEXT password
+    TEXT role
+    INTEGER approved
+    TEXT approvedAt
+    TEXT approvedBy
+    TEXT firstName
+    TEXT lastName
+    INTEGER age
+    TEXT jobTitle
+    TEXT location
+    TEXT skills
+    INTEGER schoolId FK
+    INTEGER companyId FK
+    TEXT profileJson
+  }
+
+  student_profiles {
+    INTEGER user_id PK, FK
+    TEXT headline
+    TEXT location
+    TEXT bio
+    TEXT phone
+    TEXT portfolio
+    TEXT availability
+    TEXT linkedin
+    TEXT desired_roles_json
+    TEXT education_json
+    INTEGER graduation_year
+    TEXT social_json
+    TEXT skills_json
+    TEXT projects_json
+  }
+
+  schools {
+    INTEGER id PK
+    TEXT name
+    TEXT slug UK
+    TEXT description
+    TEXT website
+    TEXT location
+    TEXT extra_json
+  }
+
+  company_profiles {
+    INTEGER user_id PK, FK
+    TEXT description
+    TEXT website
+    TEXT location
+    TEXT contact_name
+    TEXT phone
+    TEXT extra_json
+  }
+
+  jobs {
+    INTEGER id PK
+    TEXT title
+    TEXT description
+    INTEGER company_id FK
+    TEXT location
+    INTEGER school_id FK
+    DATETIME created_at
+  }
+
+  applications {
+    INTEGER id PK
+    INTEGER job_id FK
+    INTEGER student_id FK
+    TEXT message
+    TEXT status
+    DATETIME created_at
+  }
+
+  applications_history {
+    INTEGER id PK
+    INTEGER application_id FK
+    TEXT status
+    TEXT note
+    INTEGER changed_by FK
+    DATETIME changed_at
+  }
+
+  student {
+    INTEGER id PK
+    STRING first_name
+    STRING last_name
+    INTEGER age
+    STRING job_title
+    STRING location
+    INTEGER school_id FK
+    INTEGER company_id FK
+    JSON skills
+  }
+
+  school {
+    INTEGER id PK
+    STRING name
+    STRING location
+    JSON specialties
+  }
+
+  company {
+    INTEGER id PK
+    STRING name
+    STRING location
+    JSON specialties
+  }
+
+  job_offer {
+    INTEGER id PK
+    STRING title
+    TEXT description
+    INTEGER company_id FK
+    JSON tags
+  }
+
+  schools ||--o{ users : "schoolId"
+  users ||--o{ users : "companyId"
+  users ||--|| student_profiles : "profile"
+  users ||--|| company_profiles : "profile"
+  users ||--o{ jobs : "company_id"
+  schools ||--o{ jobs : "school_id"
+  jobs ||--o{ applications : "job_id"
+  users ||--o{ applications : "student_id"
+  applications ||--o{ applications_history : "application_id"
+  users ||--o{ applications_history : "changed_by"
+
+  school ||--o{ student : "school_id"
+  company ||--o{ student : "company_id"
+  company ||--o{ job_offer : "company_id"
+```
+
+La base principale utilisée par l'application est initialisée dans `Back/init_sqlite.php`. Les tables `student`, `school`, `company` et `job_offer` correspondent aux entités Doctrine historiques encore présentes dans le back.
+
 ## Fonctionnalités
 
 - Annuaire des talents avec recherche, tags, fiches étudiants et liens vers école/entreprise.

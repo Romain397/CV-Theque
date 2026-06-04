@@ -1,6 +1,6 @@
 {
     "schemaVersion": 3,
-    "fetchedAt": "2026-06-02T21:22:35+00:00",
+    "fetchedAt": "2026-06-03T08:30:50+00:00",
     "items": {
         "2d2a7166eaf504ab96fef12b2839559a157e9305e834696e6f2ec8f3866fc16d": {
             "canonicalTitle": "Alternance - Demenageur",
@@ -676,6 +676,39 @@
             ],
             "summary": "Alternance - 900 - 1 400 € / mois - 12 mois Acme Corp recherche un profil backend pour renforcer les APIs utilisées par les équipes produit et les interfaces internes. Le poste est orienté qualité, intégration et fiabilité des services.",
             "warnings": []
+        },
+        "49521af61bfa610dd1d0598f0cc840bb7339440fd3c3aee3e606757b7520ae72": {
+            "canonicalTitle": "Alternance - Magasinier",
+            "normalizedTags": [
+                "Alternance",
+                "Enseignement",
+                "Magasinier"
+            ],
+            "keywords": [
+                "Magasinier",
+                "Enseignement"
+            ],
+            "summary": "Alternance - 492,22 - 1 823,03 € / mois - 24 mois",
+            "warnings": []
+        },
+        "profile:6689d59eab3048957587ccf68a59b475eb5b043f5c2728a9e5c0e0c7bb15b62b": {
+            "title": "Développeuse Frontend",
+            "summary": "Nora Benali Développeuse Frontend basé à Montpellier J’aime les projets concrets où l’on peut améliorer progressivement la qualité et la stabilité du code.",
+            "highlights": [
+                "Localisation: Montpellier",
+                "Compétences: React, TypeScript, Tests",
+                "Acme Corp"
+            ],
+            "keywords": [
+                "React",
+                "TypeScript",
+                "Tests",
+                "Développeuse",
+                "Frontend",
+                "Aime",
+                "Projets",
+                "Concrets"
+            ]
         }
     }
 }
